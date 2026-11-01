@@ -40,6 +40,8 @@ export const movePhrase = (terms, fromId, toId, phrase) => addPhrase(removePhras
 
 export const TEACHABLE = /** @type {const} */ ({ filler: "filler word", qualifiers: "qualifier", moves: "move word" });
 const REGIONS = ["upper", "lower", "full"];
+const FACETS = ["terrain", "feature", "hold", "orientation", "position", "transition"];
+const PARTS = ["hand", "foot", "leg", "body"];
 
 /** @param {Words} words @returns {[string, string[]][]} */
 const grammar = words => [
@@ -90,4 +92,54 @@ export function addWords(words, list, items, terms = [], region) {
       skipped.push({ word: norm(word) || word, reason: e instanceof Error ? e.message : String(e) });
     }
   return { words: next, added, skipped };
+}
+
+/** @param {string} name */
+export const termId = name => norm(name).replace(/'/g, "").replace(/ +/g, "-");
+
+/**
+ * @param {Term[]} terms @param {Words} words
+ * @param {{ id: string, name: string, facets: string[], region?: string, part?: string, parent?: string, match: string[] }} draft
+ * @returns {Term[]}
+ */
+export function addTerm(terms, words, { id, name, facets, region, part, parent, match }) {
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id))
+    throw new Error("An id takes lowercase letters and numbers, joined by hyphens.");
+  const taken = terms.find(t => t.id === id);
+  if (taken) throw new Error(`The id “${id}” is already used by ${taken.name}.`);
+  const title = name.trim();
+  if (!title) throw new Error("A term needs a name.");
+  if (!facets.length) throw new Error("A term needs at least one facet.");
+  for (const [i, facet] of facets.entries()) {
+    if (!FACETS.includes(facet)) throw new Error(`“${facet}” is not a facet.`);
+    if (facets.indexOf(facet) !== i) throw new Error(`“${facet}” is listed twice.`);
+  }
+  if (region && !REGIONS.includes(region)) throw new Error(`“${region}” is not a region.`);
+  if (part && !PARTS.includes(part)) throw new Error(`“${part}” is not a part.`);
+  if (parent) find(terms, parent);
+  if (facets.includes("position") && !(part && region)) throw new Error("A position needs a part and a region.");
+  if (facets.includes("transition") && !region) throw new Error("A transition needs a region.");
+  if (!match.length) throw new Error("A term needs at least one phrase.");
+  const phrases = [...new Set(match.map(key))];
+  const lists = [
+    ...grammar(words),
+    /** @type {[string, string[]]} */ (["step break", [...words.splitAlways, ...words.splitBeforeMove]]),
+  ];
+  for (const phrase of phrases) {
+    const list = lists.find(([, entries]) => entries.includes(phrase));
+    if (list) throw new Error(`“${phrase}” is already a ${list[0]}.`);
+  }
+  /** @type {Term} */
+  const term = {
+    id,
+    name: title,
+    facets,
+    ...(region && { region }),
+    ...(part && { part }),
+    ...(parent && { parent }),
+    match: phrases,
+  };
+  // The first term with a phrase is its default reading, so a new term goes after any that share one.
+  const after = terms.findLastIndex(t => t.facets[0] === facets[0] || t.match.some(m => phrases.includes(norm(m))));
+  return [...terms.slice(0, after + 1), term, ...terms.slice(after + 1)];
 }

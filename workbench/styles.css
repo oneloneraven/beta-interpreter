@@ -1837,3 +1837,24 @@ button.pill:hover {
     transition: none !important;
   }
 }
+
+.new-term-box > summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.new-term {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.new-term .field[hidden] {
+  display: none;
+}
+
+.facet-toggle[aria-pressed="true"] {
+  border-color: currentColor;
+  font-weight: 600;
+}
