@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
-import { addPhrase, addWords, movePhrase, removePhrase } from "./vocab-edit.js";
+import { addPhrase, addTerm, addWords, movePhrase, removePhrase } from "./vocab-edit.js";
 
 const run = promisify(execFile);
 const root = new URL("..", import.meta.url);
@@ -42,6 +42,14 @@ const POST = {
             : null;
     if (!next) throw new Error(`Unknown action “${action}”.`);
     await writeJson(TERMS, { terms: next });
+    return { ok: true };
+  },
+  async "/api/vocabulary/term"(draft) {
+    const isList = (/** @type {unknown} */ l) => Array.isArray(l) && l.every(x => typeof x === "string");
+    if (typeof draft.id !== "string" || typeof draft.name !== "string" || !isList(draft.facets) || !isList(draft.match))
+      throw new Error("Send an id, a name, and the facets and phrases as lists.");
+    const [{ terms }, words] = await Promise.all([readJson(TERMS), readJson(WORDS)]);
+    await writeJson(TERMS, { terms: addTerm(terms, words, draft) });
     return { ok: true };
   },
   async "/api/vocabulary/words"({ list, words: items, region }) {

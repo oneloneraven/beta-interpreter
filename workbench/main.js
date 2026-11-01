@@ -5,6 +5,7 @@ import { $, h } from "./dom.js";
 import { groupQuestions } from "./questions.js";
 import { confidence } from "./confidence.js";
 import { drawLinks, renderGauge } from "./gauge.js";
+import { termId } from "./vocab-edit.js";
 
 /**
  * @typedef {import("../src/interpreter.js").Term} Term
@@ -1033,6 +1034,101 @@ function termPicker(onPick, placeholder) {
   return h("div", { class: "picker" }, [input, list]);
 }
 
+const NEW_TERM_FACETS = ["terrain", "feature", "hold", "orientation", "position", "transition"];
+
+/** @param {string} word */
+function newTermForm(word) {
+  const field = (/** @type {string} */ label, /** @type {Node} */ control) =>
+    h("label", { class: "field" }, [h("span", { text: label }), control]);
+  const text = (/** @type {string} */ value) =>
+    /** @type {HTMLInputElement} */ (h("input", { type: "text", class: "search", value }));
+  const choice = (/** @type {string} */ none, /** @type {[string, string][]} */ options) =>
+    /** @type {HTMLSelectElement} */ (
+      h("select", { class: "search" }, [
+        h("option", { value: "", text: none }),
+        ...options.map(([value, label]) => h("option", { value, text: label })),
+      ])
+    );
+  const name = text(word.charAt(0).toUpperCase() + word.slice(1));
+  const id = text(termId(name.value));
+  name.addEventListener("input", () => {
+    if (!id.dataset.edited) id.value = termId(name.value);
+  });
+  id.addEventListener("input", () => {
+    id.dataset.edited = "true";
+  });
+  const region = choice(
+    "None",
+    ["upper", "lower", "full"].map(v => [v, v]),
+  );
+  const part = choice(
+    "None",
+    ["hand", "foot", "leg", "body"].map(v => [v, v]),
+  );
+  const parent = choice(
+    "None",
+    [...(state.vocabulary?.terms ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map(t => [t.id, t.name]),
+  );
+  const match = text(word);
+  const regionField = field("Region", region);
+  const partField = field("Part", part);
+  /** @type {string[]} */
+  const facets = [];
+  const usesRegion = () => facets.some(f => f !== "terrain" && f !== "feature");
+  const usesPart = () => usesRegion() && facets.some(f => f !== "transition");
+  const toggles = NEW_TERM_FACETS.map(facet =>
+    h("button", { type: "button", class: "ghost facet-toggle", "aria-pressed": "false", text: facet }),
+  );
+  const refresh = () => {
+    toggles.forEach((b, i) => {
+      const at = facets.indexOf(NEW_TERM_FACETS[i]);
+      b.setAttribute("aria-pressed", String(at >= 0));
+      b.textContent = at >= 0 ? `${at + 1}. ${NEW_TERM_FACETS[i]}` : NEW_TERM_FACETS[i];
+    });
+    regionField.hidden = !usesRegion();
+    partField.hidden = !usesPart();
+  };
+  for (const [i, b] of toggles.entries())
+    b.addEventListener("click", () => {
+      const at = facets.indexOf(NEW_TERM_FACETS[i]);
+      if (at >= 0) facets.splice(at, 1);
+      else facets.push(NEW_TERM_FACETS[i]);
+      refresh();
+    });
+  refresh();
+  const create = h("button", { type: "submit", text: "Create term" });
+  const form = h("form", { class: "new-term" }, [
+    field("Name", name),
+    field("Id", id),
+    h("div", { class: "field" }, [
+      h("span", { text: "Facets, in order: the parser reads the first" }),
+      h("div", { class: "actions" }, toggles),
+    ]),
+    regionField,
+    partField,
+    field("Parent", parent),
+    field("Match phrases, comma-separated", match),
+    create,
+  ]);
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    correct(
+      "/api/vocabulary/term",
+      {
+        id: id.value,
+        name: name.value,
+        facets,
+        region: usesRegion() ? region.value : undefined,
+        part: usesPart() ? part.value : undefined,
+        parent: parent.value,
+        match: match.value.split(",").filter(p => p.trim()),
+      },
+      () => `Added ${name.value.trim()}.`,
+    );
+  });
+  return h("details", { class: "new-term-box" }, [h("summary", { text: `New term for “${word}”` }), form]);
+}
+
 function inspector() {
   const r = state.reading;
   const i = state.selected;
@@ -1161,6 +1257,7 @@ function inspector() {
             ),
           "Search terms",
         ),
+        newTermForm(norm(t.text)),
         row,
       ]),
     );
