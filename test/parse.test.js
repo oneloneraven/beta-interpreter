@@ -235,6 +235,11 @@ describe("where a hold is", () => {
     expect([rail.side, rail.part, rail.holds[0].where]).toEqual(["right", "hand", ["left"]]);
   });
 
+  it("traces a side that describes a hold as a location", () => {
+    const r = parse("Right hand to the rail on the left");
+    expect(r.trace.filter(t => t.text === "left").map(t => t.kind)).toEqual(["location"]);
+  });
+
   it("places a hold relative to a limb", () => {
     const b = parse("Move left hand to left crimp above left of the right hand").beats[0];
     const [crimp] = b.holds;

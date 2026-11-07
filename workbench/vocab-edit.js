@@ -50,6 +50,7 @@ const grammar = words => [
   ["crux marker", words.crux],
   ["move word", Object.keys(words.moves)],
   ["qualifier", words.qualifiers],
+  ["location word", Object.keys(words.locations ?? {})],
   ["filler word", words.filler],
 ];
 

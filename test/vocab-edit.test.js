@@ -65,6 +65,7 @@ describe("vocabulary edits", () => {
 
   it("refuses a word already in any grammar list, a term phrase, more than one word, or an unknown list", () => {
     expect(() => addWord(fresh().words, "filler", "the")).toThrow("“the” is already a filler word.");
+    expect(() => addWord(fresh().words, "filler", "under")).toThrow("“under” is already a location word.");
     expect(() => addWord(fresh().words, "qualifiers", "the")).toThrow("“the” is already a filler word.");
     expect(() => addWord(fresh().words, "filler", "tiny")).toThrow("“tiny” is already a qualifier.");
     expect(() => addWord(fresh().words, "filler", "reach")).toThrow("“reach” is already a move word.");

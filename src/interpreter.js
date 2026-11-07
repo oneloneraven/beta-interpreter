@@ -348,7 +348,10 @@ export function createInterpreter({ terms, words }) {
       }
       for (const run of runs.toReversed()) {
         const swap = swaps.get(run.to);
-        if (swap) items.splice(run.from, run.to - run.from + 1, swap);
+        if (!swap) continue;
+        if (swap.kind === "location")
+          for (const t of out.trace) if (t.s >= swap.s && t.e <= swap.e && t.kind === "limb") t.kind = "location";
+        items.splice(run.from, run.to - run.from + 1, swap);
       }
       if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
