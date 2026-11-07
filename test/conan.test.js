@@ -17,7 +17,7 @@ describe("the crux of Conan, written by the maintainer", () => {
   it("reads leg as a limb word and squeeze after it as leg compression", () => {
     expect([r.beats[1].side, r.beats[1].part]).toEqual(["right", "leg"]);
     expect(r.beats[1].pos.map(t => t.id)).toEqual(["flag", "compression-legs"]);
-    expect(say(r.beats[1])).toBe("Right leg: flag, compression (legs).");
+    expect(say(r.beats[1])).toBe("Right leg: flag, compression (legs) under the roof.");
   });
 
   it("infers the crux when the beta has only one move", () => {

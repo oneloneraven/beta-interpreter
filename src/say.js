@@ -28,17 +28,49 @@ const pluralName = name => {
   return name.slice(0, at) + pluralWord(name.slice(at));
 };
 
+/** @type {Set<string>} */
+const BESIDE = new Set(["left", "right", "upper"]);
+/** @type {Set<string>} */
+const PART_OF = new Set(["top", "bottom", "back", "side", "front"]);
+
+/** @param {Hold} h @returns {[string[], string[]]} */
+function split(h) {
+  if (!h.of) return [h.where.filter(w => BESIDE.has(w)), h.where.filter(w => !BESIDE.has(w))];
+  if (h.where.every(w => BESIDE.has(w))) return [[], h.where];
+  const i = h.where.findIndex(w => !BESIDE.has(w));
+  return [h.where.slice(0, i), h.where.slice(i)];
+}
+
 /** @param {Hold} h */
 export function holdName(h) {
   const kinds = h.kinds.map(k => (h.plural.includes(k.id) ? pluralName(k.name.toLowerCase()) : k.name.toLowerCase()));
-  return [...h.qualifiers, ...(h.ori ? [h.ori.name.toLowerCase()] : []), ...kinds].join(" ");
+  return [...h.qualifiers, ...split(h)[0], ...(h.ori ? [h.ori.name.toLowerCase()] : []), ...kinds].join(" ");
+}
+
+/** @param {Hold} h @param {string} name */
+const counted = (h, name) => (h.plural.length ? name : `${art(name)} ${name}`);
+
+/** @param {NonNullable<Hold["of"]>} of */
+function anchorPhrase(of) {
+  if (of.kind === "hold") return counted(of.hold, holdName(of.hold));
+  if (of.kind === "terrain") return `the ${of.term.name.toLowerCase()}`;
+  return ["the", of.side, of.part].filter(Boolean).join(" ");
 }
 
 /** @param {Hold} h */
 function holdPhrase(h) {
   const name = holdName(h);
-  if (!name || !h.role) return "";
-  return h.plural.length ? `${ROLE[h.role]} ${name}` : `${ROLE[h.role]} ${art(name)} ${name}`;
+  const rest = split(h)[1];
+  const role = h.role ? ROLE[h.role] : "";
+  if (!rest.length) return name && role ? `${role} ${counted(h, name)}` : "";
+  const where = rest.join(" ");
+  if (!h.of && !PART_OF.has(rest[0]))
+    return [name && role, name && counted(h, name), `(${where})`].filter(Boolean).join(" ");
+  if (!h.of) return [role, `the ${where}`, name && `of ${counted(h, name)}`].filter(Boolean).join(" ");
+  const located = PART_OF.has(rest[0])
+    ? `at the ${where} of ${anchorPhrase(h.of)}`
+    : `${where}${BESIDE.has(rest[rest.length - 1]) ? " of" : ""} ${anchorPhrase(h.of)}`;
+  return [name && role, name && counted(h, name), located].filter(Boolean).join(" ");
 }
 
 /** @param {Beat} b */
