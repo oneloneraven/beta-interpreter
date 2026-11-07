@@ -74,7 +74,7 @@ describe("paraphrased sample betas", () => {
   it("corrects a clear typo and asks about uncertain ones", () => {
     expect(read("rh sloppr undercut, lf toe hok, campus to jugg, bump to the horn")).toMatchObject({
       features: [],
-      steps: ["Right hand: on an undercling sloper.", "Left foot: toe hook.", "Campus.", "Bump to a horn."],
+      steps: ["Right hand: on an undercling sloper.", "Left foot: toe.", "Campus.", "Bump to a horn."],
       unknown: [
         ["hok", "hook"],
         ["jugg", "jug"],

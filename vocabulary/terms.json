@@ -412,7 +412,15 @@
       "facets": ["position"],
       "region": "lower",
       "part": "foot",
-      "match": ["toe hook", "toe", "toehook"]
+      "match": ["toe hook", "toehook"]
+    },
+    {
+      "id": "toe",
+      "name": "Toe",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["toe"]
     },
     {
       "id": "bat-hang",
