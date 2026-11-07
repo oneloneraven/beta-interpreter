@@ -173,4 +173,13 @@ describe("the limb of a step", () => {
   it("is not changed by a side that says where the hold is", () => {
     expect(limb("Move left hand to the crimp on the right")).toEqual(["left", "hand"]);
   });
+
+  it("is not taken from a side that says which way to move", () => {
+    expect(limb("Go right with left hand to the jug")).toEqual(["left", "hand"]);
+    expect(limb("Reach up and right with your left hand to the crimp")).toEqual(["left", "hand"]);
+  });
+
+  it("keeps a side named on its own when no limb is named", () => {
+    expect(limb("Go right to the jug")).toEqual(["right", null]);
+  });
 });
