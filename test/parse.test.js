@@ -311,6 +311,10 @@ describe("a toe on a hold", () => {
     expect(step("Move right foot to press toe on horn")).toMatchObject({ pos: ["toe"], holds: [["horn"]] });
   });
 
+  it("reads bare toes as a toe on the hold", () => {
+    expect(step("Toes on the edge").pos).toEqual(["toe"]);
+  });
+
   it("still reads a toe hook as a toe hook", () => {
     expect(step("Right toe hook on the horn").pos).toEqual(["toe-hook"]);
     expect(step("Right toehook on the horn").pos).toEqual(["toe-hook"]);
