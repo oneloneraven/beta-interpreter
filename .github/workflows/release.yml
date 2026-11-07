@@ -47,7 +47,7 @@ jobs:
           cat "$RUNNER_TEMP/plan.json"
           echo "count=$(jq length "$RUNNER_TEMP/plan.json")" >> "$GITHUB_OUTPUT"
 
-      - uses: ./.github/actions/setup-node-pnpm
+      - uses: $/.github/actions/setup-node-pnpm
         if: steps.plan.outputs.count != '0'
 
       - name: Test, pack, tag and publish each release, oldest first
