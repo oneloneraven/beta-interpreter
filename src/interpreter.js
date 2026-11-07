@@ -335,9 +335,15 @@ export function createInterpreter({ terms, words }) {
         while (p >= 0 && items[p].kind === "filler") p--;
         const afterLocation = items[p]?.kind === "location" || swaps.get(p)?.kind === "location";
         const at = { n: 1, s: items[run.from].s, e: items[run.to].e };
-        const prevWord = run.from > 0 ? norm(text.slice(items[run.from - 1].s, items[run.from - 1].e)) : "";
+        /** @param {Item | undefined} m */
+        const word = m => (m ? norm(text.slice(m.s, m.e)) : "");
+        const prevWord = word(items[run.from - 1]);
         if (run.part && afterLocation) swaps.set(run.to, { kind: "anchor", side: run.side, part: run.part, ...at });
-        else if (!run.part && run.side && (afterLocation || prevWord === "the" || holdish(items[run.to + 1])))
+        else if (
+          !run.part &&
+          run.side &&
+          (afterLocation || prevWord === "the" || word(items[run.to + 1]) === "of" || holdish(items[run.to + 1]))
+        )
           swaps.set(run.to, { kind: "location", word: run.side, ...at });
       }
       for (const run of runs.toReversed()) {

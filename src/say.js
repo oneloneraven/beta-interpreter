@@ -35,10 +35,13 @@ const PART_OF = new Set(["top", "bottom", "back", "side", "front"]);
 
 /** @param {Hold} h @returns {[string[], string[]]} */
 function split(h) {
-  if (!h.of) return [h.where.filter(w => BESIDE.has(w)), h.where.filter(w => !BESIDE.has(w))];
-  if (h.where.every(w => BESIDE.has(w))) return [[], h.where];
-  const i = h.where.findIndex(w => !BESIDE.has(w));
-  return [h.where.slice(0, i), h.where.slice(i)];
+  if (h.of && h.where.every(w => BESIDE.has(w))) return [[], h.where];
+  if (h.of) {
+    const i = h.where.findIndex(w => !BESIDE.has(w));
+    return [h.where.slice(0, i), h.where.slice(i)];
+  }
+  const withPart = h.where.map((w, i) => !BESIDE.has(w) || PART_OF.has(h.where[i + 1] ?? ""));
+  return [h.where.filter((_, i) => !withPart[i]), h.where.filter((_, i) => withPart[i])];
 }
 
 /** @param {Hold} h */
@@ -64,7 +67,7 @@ function holdPhrase(h) {
   const role = h.role ? ROLE[h.role] : "";
   if (!rest.length) return name && role ? `${role} ${counted(h, name)}` : "";
   const where = rest.join(" ");
-  if (!h.of && !PART_OF.has(rest[0]))
+  if (!h.of && !rest.some(w => PART_OF.has(w)))
     return [name && role, name && counted(h, name), `(${where})`].filter(Boolean).join(" ");
   if (!h.of) return [role, `the ${where}`, name && `of ${counted(h, name)}`].filter(Boolean).join(" ");
   const located = PART_OF.has(rest[0])

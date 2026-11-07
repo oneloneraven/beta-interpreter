@@ -242,6 +242,28 @@ describe("where a hold is", () => {
     expect(crimp.of).toEqual({ kind: "limb", side: "right", part: "hand" });
   });
 
+  it("places a hold to one side of another", () => {
+    const [crimp] = holds("Left hand to the crimp left of the jug");
+    expect([ids(crimp), crimp.where, crimp.of?.kind === "hold" && ids(crimp.of.hold)]).toEqual([
+      ["crimp"],
+      ["left"],
+      ["jug"],
+    ]);
+  });
+
+  it("keeps a side with the part of the hold it names", () => {
+    /** @param {string} text */
+    const said = text => say(parse(text).beats[0]);
+    expect(said("Right hand to the left side of the jug")).toBe("Right hand: to the left side of a jug.");
+    expect(said("Move left foot to bottom of rail on the left")).toBe("Left foot: to the bottom of a left rail.");
+  });
+
+  it("reads a vocabulary with no location words", () => {
+    const { locations, ...words } = vocabulary.words;
+    const r = createInterpreter({ terms: vocabulary.terms, words }).parse("Left hand to the crimp under the roof");
+    expect(r.unknown.map(u => u.raw)).toEqual(["under"]);
+  });
+
   it("doesn't read a side that says which way to move as where a hold is", () => {
     expect(holds("Go right with left hand to the jug")[0].where).toEqual([]);
   });
