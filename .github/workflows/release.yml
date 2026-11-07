@@ -1,8 +1,6 @@
 name: Release
 
-# When a PR with a release label merges, tag the merge commit with the next version, create a GitHub Release with
-# the packed package attached, and publish it to GitHub Packages. Nothing is committed: the version is written into
-# package.json only inside this job's checkout, for the artefact.
+# Each run releases every labelled PR since the latest tag, so one cancelled while queued loses nothing (docs/versioning.md).
 on:
   pull_request:
     types: [closed]
@@ -30,6 +28,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,42 +36,45 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Work out the version
-        id: version
-        env:
-          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          BUMP: ${{ inputs.bump }}
-        run: echo "version=$(node scripts/next-version.mjs)" >> "$GITHUB_OUTPUT"
-
-      - uses: ./.github/actions/setup-node-pnpm
-        if: steps.version.outputs.version != ''
-
-      - name: Test, build the types and pack
-        if: steps.version.outputs.version != ''
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          pnpm test
-          pnpm build:types
-          npm pkg set version="${VERSION#v}"
-          pnpm pack --pack-destination "$RUNNER_TEMP/pack"
-
-      - name: Tag and create the release
-        if: steps.version.outputs.version != ''
+      - name: Plan the releases
+        id: plan
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          BUMP: ${{ inputs.bump }}
+        run: |
+          node scripts/plan-releases.mjs > "$RUNNER_TEMP/plan.json"
+          cat "$RUNNER_TEMP/plan.json"
+          echo "count=$(jq length "$RUNNER_TEMP/plan.json")" >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/setup-node-pnpm
+        if: steps.plan.outputs.count != '0'
+
+      - name: Test, pack, tag and publish each release, oldest first
+        if: steps.plan.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "$VERSION" -m "$VERSION"
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$VERSION"
-          gh release create "$VERSION" --repo "$GITHUB_REPOSITORY" --title "$VERSION" --generate-notes "$RUNNER_TEMP"/pack/*.tgz
-
-      - name: Publish to GitHub Packages
-        if: steps.version.outputs.version != ''
-        env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
-        run: |
           printf '//npm.pkg.github.com/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > "$RUNNER_TEMP/.npmrc"
-          npm publish "$RUNNER_TEMP"/pack/*.tgz --userconfig "$RUNNER_TEMP/.npmrc"
+          jq -c '.[]' "$RUNNER_TEMP/plan.json" > "$RUNNER_TEMP/releases"
+          while read -r release <&3; do
+            sha=$(jq -r .sha <<< "$release")
+            version=$(jq -r .version <<< "$release")
+            pack="$RUNNER_TEMP/pack/$version"
+            git checkout --quiet --force --detach "$sha"
+            git clean -fdxq -e node_modules
+            pnpm install --frozen-lockfile
+            pnpm test
+            pnpm build:types
+            npm pkg set version="${version#v}"
+            pnpm pack --pack-destination "$pack"
+            git checkout --quiet -- package.json
+            git tag -a "$version" -m "$version" "$sha"
+            git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$version"
+            npm publish "$pack"/*.tgz --userconfig "$RUNNER_TEMP/.npmrc"
+            gh release create "$version" --repo "$GITHUB_REPOSITORY" --title "$version" --generate-notes "$pack"/*.tgz \
+              || echo "::warning::$version is tagged and published, but its GitHub Release wasn't created."
+          done 3< "$RUNNER_TEMP/releases"

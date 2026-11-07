@@ -9,9 +9,10 @@ change that adds or moves a trust boundary ([coding standards](coding-standards.
   into a structured record. It does no I/O, keeps no state between calls and
   makes no network requests. Climbing Logbook will install it as a versioned
   package.
-- **The release job** (`.github/workflows/release.yml`): on a merged,
-  labelled PR it tests, packs and tags the package, creates a GitHub Release
-  with the tarball attached, and publishes it to GitHub Packages.
+- **The release job** (`.github/workflows/release.yml`): on a merged PR it
+  releases every labelled PR merged since the latest tag, oldest first. For
+  each, it tests, packs and tags the package, publishes it to GitHub
+  Packages, and creates a GitHub Release with the tarball attached.
 - **The workbench** (`workbench/`, `pnpm workbench`): a Vite dev server on
   `localhost:5174` for trying beta and teaching vocabulary. Its API writes
   `vocabulary/*.json` and runs `git diff` on them.
@@ -24,7 +25,7 @@ change that adds or moves a trust boundary ([coding standards](coding-standards.
 | Boundary | Between | What crosses it | Controls |
 |---|---|---|---|
 | Caller → package | Climbing Logbook and `parse` | Beta text typed by Climbing Logbook's users | Words are looked up in `Map`s, so object property names read as unknown (`test/parse.test.js`); no I/O or evaluation of input |
-| Release job → GitHub | `release.yml` and the GitHub API and Packages | The default `GITHUB_TOKEN` with `contents: write` and `packages: write` | Granted to the release job only, with read-only defaults for the workflow; actions pinned by SHA; runs only on a merged PR or a manual dispatch |
+| Release job → GitHub | `release.yml` and the GitHub API and Packages | The default `GITHUB_TOKEN` with `contents: write`, `packages: write` and `pull-requests: read` | Granted to the release job only, with read-only defaults for the workflow; actions pinned by SHA; runs only on a merged PR or a manual dispatch |
 | Browser → workbench API | Any page open in the maintainer's browser and `localhost:5174` | Requests to the vocabulary endpoints | Bound to `localhost`; POSTs refused unless the origin is the workbench and the body is JSON (`isLocalJson`, `workbench/api.js`) |
 | Climbing Logbook → maintainer's machine | The `beta_samples` export and the corpus report | Beta sample text | Saved outside any repository with mode 0600; never committed |
 
@@ -49,7 +50,7 @@ change that adds or moves a trust boundary ([coding standards](coding-standards.
 
 | Threat | Category | Mitigation | Status |
 |---|---|---|---|
-| A published version not built from `main` | Spoofing | Only the release job publishes, from the merged commit, after the tests pass | Mitigated |
+| A published version not built from `main` | Spoofing | Only the release job publishes, each version from its own PR's merge commit, after the tests pass | Mitigated |
 | A web page posts to the workbench API and rewrites the vocabulary | Tampering | POSTs need the workbench's own origin and a JSON body; vocabulary changes still reach `main` only through a reviewed PR | Mitigated |
 | A compromised dependency alters the release | Tampering | Lockfile, three-day `minimumReleaseAge`, all install scripts denied, Dependabot and dependency review, actions pinned by SHA | Mitigated |
 | A release with no record of which PR caused it | Repudiation | Tags are cut only from merged PRs; GitHub Releases have generated notes | Mitigated |
