@@ -2,3 +2,9 @@ node_modules/
 coverage/
 bi.js
 types/
+.superpowers/
+.env*
+!.env.example
+dist/
+.claude/settings.local.json
+.claude/worktrees/
