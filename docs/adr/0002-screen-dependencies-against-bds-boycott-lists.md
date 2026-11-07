@@ -52,4 +52,4 @@ Checked when the project was brought in line with the bootstrap, for its depende
 | TypeScript (`tsc`) | Microsoft | Y | Free, dev-only, no maintained non-Microsoft JavaScript type checker: allowed under the free-tool exception. |
 | Vite (workbench dev server) | VoidZero Inc. | N |  |
 | `@vitest/coverage-v8` | VoidZero Inc. | N |  |
-| `@types/node` | DefinitelyTyped (community, hosted by Microsoft) | Y | Free, dev-only type definitions, with no alternative for Node's types: allowed under the free-tool exception. |
+| `@types/node` | DefinitelyTyped (community; published and run by Microsoft's TypeScript team) | Y | Free, dev-only type definitions, with no alternative for Node's types: allowed under the free-tool exception. |
