@@ -1,4 +1,4 @@
-const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
+export const TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 const BUMPS = ["major", "minor", "patch"];
 
 /** @param {string} tag */

@@ -47,7 +47,7 @@ describe("planning from the repository", () => {
       }
       if (args[0] === "rev-list") return "a\nb";
       if (args[0] === "rev-parse") return "tip";
-      if (args[0] === "tag" && args[1] === "--points-at") return "";
+      if (args[0] === "tag" && args[1] === "--points-at") return args[2] === "a" ? "demo" : "";
       throw new Error(`unexpected git ${args.join(" ")}`);
     };
     return { git, calls };
@@ -57,6 +57,11 @@ describe("planning from the repository", () => {
     const { git, calls } = fakeGit();
     expect(planFromRepo({ git, prFor, mergeSha: "b" }).map(r => r.version)).toEqual(["v0.3.4", "v0.4.0"]);
     expect(calls).toContain("rev-list --reverse --first-parent v0.3.3..b");
+  });
+
+  it("counts only version tags as released", () => {
+    const { git } = fakeGit();
+    expect(planFromRepo({ git, prFor, mergeSha: "b" })[0]).toEqual({ sha: "a", version: "v0.3.4", pr: 1 });
   });
 
   it("refuses to plan when the latest tag isn't in the merge commit's history", () => {
@@ -83,14 +88,17 @@ describe("planning from the repository", () => {
 
 describe("reading the pull requests for a commit", () => {
   it("returns the pull request list", () => {
-    expect(parsePulls('[{"number":1}]', "abc")).toEqual([{ number: 1 }]);
+    expect(parsePulls('[{"number":1,"labels":[]}]', "abc")).toEqual([{ number: 1, labels: [] }]);
   });
 
-  it.each(["", "not json", '{"message":"Not Found"}'])("names the commit and shows the raw output for %j", output => {
-    expect(() => parsePulls(output, "abc")).toThrow(
-      `gh api returned no usable pull request list for abc: ${JSON.stringify(output)}`,
-    );
-  });
+  it.each(["", "not json", '{"message":"Not Found"}', '[{"number":1}]'])(
+    "names the commit and shows the raw output for %j",
+    output => {
+      expect(() => parsePulls(output, "abc")).toThrow(
+        `gh api returned no usable pull request list for abc: ${JSON.stringify(output)}`,
+      );
+    },
+  );
 
   it("shortens long output in the error", () => {
     expect(() => parsePulls("x".repeat(600), "abc")).toThrow(`${"x".repeat(500)}...`);

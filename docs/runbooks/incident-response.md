@@ -33,3 +33,17 @@ over, write a review from the [post-incident review template](post-incident-revi
 | Pin the caller | Keeps Climbing Logbook on a good version | A Climbing Logbook PR that pins the previous version |
 | Fix forward | Releases a corrected version | A normal PR with the right release label |
 | Rotate a secret | Replaces a leaked credential | Revoke it at the source, then set the new value everywhere it's used |
+
+## When the release job fails
+
+Each run releases every labelled PR since the latest tag, oldest first
+([versioning](../versioning.md#cutting-a-release)), so a failure on one
+version stops every version after it until it's cleared.
+
+- **A commit's tests or build fail.** Re-run the job if the cause was
+  transient. If that commit can never be released, tag it by hand with
+  the version the run planned for it, without publishing. The next run
+  then skips it, and its change ships in the next version.
+- **A version is tagged but not published.** The next run won't retry it.
+  Check out the tag, set that version in `package.json`, pack it, and
+  publish the tarball to GitHub Packages by hand.

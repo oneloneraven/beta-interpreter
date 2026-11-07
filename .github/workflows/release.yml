@@ -1,9 +1,6 @@
 name: Release
 
-# On every merged PR, release each labelled PR merged since the latest tag, oldest first: tag its merge commit, publish
-# the package built from that commit to GitHub Packages, and create a GitHub Release with the package attached. A run
-# cancelled while waiting in the queue loses nothing, because the next run releases its PR too. Nothing is committed:
-# the version is written into package.json only inside this job's checkout, for the artefact.
+# Each run releases every labelled PR since the latest tag, so one cancelled while queued loses nothing (docs/versioning.md).
 on:
   pull_request:
     types: [closed]

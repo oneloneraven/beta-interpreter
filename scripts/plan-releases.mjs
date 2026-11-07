@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { bumpFromLabels, latestVersion, nextVersion } from "./next-version.mjs";
+import { bumpFromLabels, latestVersion, nextVersion, TAG } from "./next-version.mjs";
 
 /** @typedef {{ number: number, labels: string[] }} Pull */
 /** @typedef {{ sha: string, version: string, pr: number | null }} Release */
@@ -28,12 +28,12 @@ export function planReleases({ commits, latest, isTagged, prFor }) {
 
 /**
  * @param {Git} git
- * @param {string | null} ancestor
+ * @param {string} ancestor
  * @param {string} descendant
  */
 function isAncestor(git, ancestor, descendant) {
   try {
-    git(["merge-base", "--is-ancestor", String(ancestor), descendant]);
+    git(["merge-base", "--is-ancestor", ancestor, descendant]);
     return true;
   } catch {
     return false;
@@ -52,7 +52,15 @@ export function planFromRepo({ git, prFor, mergeSha, bump }) {
     throw new Error(`${latest} isn't in ${mergeSha}'s history, so there's no safe range to release from.`);
   const range = latest ? `${latest}..${mergeSha}` : mergeSha;
   const commits = git(["rev-list", "--reverse", "--first-parent", range]).split("\n").filter(Boolean);
-  return planReleases({ commits, latest, isTagged: sha => git(["tag", "--points-at", sha]) !== "", prFor });
+  return planReleases({
+    commits,
+    latest,
+    isTagged: sha =>
+      git(["tag", "--points-at", sha])
+        .split("\n")
+        .some(t => TAG.test(t)),
+    prFor,
+  });
 }
 
 /**
@@ -63,7 +71,7 @@ export function planFromRepo({ git, prFor, mergeSha, bump }) {
 export function parsePulls(output, sha) {
   try {
     const pulls = JSON.parse(output);
-    if (Array.isArray(pulls)) return pulls;
+    if (Array.isArray(pulls) && pulls.every(p => Array.isArray(p?.labels))) return pulls;
   } catch {}
   const shown = output.length > 500 ? `${output.slice(0, 500)}...` : output;
   throw new Error(`gh api returned no usable pull request list for ${sha}: ${JSON.stringify(shown)}`);
