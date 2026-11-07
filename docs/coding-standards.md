@@ -109,6 +109,9 @@ browser at desktop width.
   a `-latest` label. Dependabot doesn't move it: when GitHub moves a
   `-latest` label to a new image, move every pin to that image by hand in
   one PR.
+- Node is the exact release in `.nvmrc`, which every `setup-node` step reads
+  and `nvm use` picks up locally. Move it by hand to the newest Active LTS
+  line when that changes, with `@types/node` on the same major.
 
 ### JavaScript toolchain
 
