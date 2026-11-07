@@ -368,6 +368,8 @@ export function createInterpreter({ terms, words }) {
       /** @type {Hold | null} */
       let placed = null;
       let fresh = true;
+      /** @type {Map<Term, string>} */
+      const posKey = new Map();
       const placing = () =>
         pendingLoc.length > 0 && (!!placed || pendingLoc.some(w => locations.get(w) === "relative"));
       /** @param {Anchor} anchor */
@@ -510,6 +512,7 @@ export function createInterpreter({ terms, words }) {
         pendingQ = [];
         if (beat.pos.includes(term) || beat.moves.includes(term)) continue;
         if (facet === "position") {
+          posKey.set(term, m.key);
           beat.pos.push(term);
           beat.order.push({ kind: "position", term, role });
           if (!fits(beat.part, term.part))
@@ -527,6 +530,16 @@ export function createInterpreter({ terms, words }) {
         beat.order.push({ kind: "hold", hold });
       }
       beat.qualifiers.push(...pendingQ);
+      for (const whole of [...beat.pos])
+        for (const phrase of whole.match) {
+          const named = norm(phrase).split(" ");
+          const parts = beat.pos.filter(p => p !== whole && named.includes(posKey.get(p) ?? ""));
+          const covered = named.every(w => w === posKey.get(whole) || parts.some(p => posKey.get(p) === w));
+          if (named.length < 2 || !parts.length || !covered) continue;
+          beat.pos = beat.pos.filter(p => !parts.includes(p));
+          beat.order = beat.order.filter(o => o.kind !== "position" || !parts.includes(o.term));
+          break;
+        }
       for (const h of beat.holds) h.role ||= beat.moves.length || beat.move ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";

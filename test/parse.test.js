@@ -294,3 +294,38 @@ describe("where a hold is", () => {
     },
   );
 });
+
+describe("a toe on a hold", () => {
+  /** @param {string} text */
+  const step = text => {
+    const b = parse(text).beats[0];
+    return { pos: b.pos.map(t => t.id), holds: b.holds.map(h => h.kinds.map(k => k.id)), said: say(b) };
+  };
+
+  it("reads a bare toe as a toe on the hold, not a toe hook", () => {
+    expect(step("Left toe on jib")).toMatchObject({
+      pos: ["toe"],
+      holds: [["pebble"]],
+      said: "Left foot: toe on a pebble.",
+    });
+    expect(step("Move right foot to press toe on horn")).toMatchObject({ pos: ["toe"], holds: [["horn"]] });
+  });
+
+  it("reads bare toes as a toe on the hold", () => {
+    expect(step("Toes on the edge").pos).toEqual(["toe"]);
+  });
+
+  it("still reads a toe hook as a toe hook", () => {
+    expect(step("Right toe hook on the horn").pos).toEqual(["toe-hook"]);
+    expect(step("Right toehook on the horn").pos).toEqual(["toe-hook"]);
+  });
+
+  it("reads a heel and a toe joined by cam as one cam", () => {
+    expect(step("Right heel on horn and cam the toe")).toMatchObject({ pos: ["cam"], holds: [["horn"]] });
+    expect(step("Place right heel in gulley behind the flake and cam the toe").pos).toEqual(["cam"]);
+  });
+
+  it("keeps a heel hook and a toe hook named in full", () => {
+    expect(step("Right heel hook and toe hook on the horn").pos).toEqual(["heel-hook", "toe-hook"]);
+  });
+});
