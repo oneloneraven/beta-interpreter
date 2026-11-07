@@ -8,11 +8,13 @@ Status: early research and development. Outstanding work and open questions are 
 
 ## Design decisions
 
-- **Rules first, no language model.** The vocabulary is finite. Rules are instant, work offline, can be explained and need no download, which matters at the crag. A small model could be added later as a fallback, but only where real beta shows the rules falling short.
-- **The vocabulary is data, not code.** Teaching the interpreter means reviewed changes to `vocabulary/`.
-- **A flat, faceted taxonomy.** Terms overlap rather than forming a tree: a crimp is both a hold and a grip, and compression applies to hands and legs. Each term has facets, a body region and part, and the phrases it matches.
-- **Movements, not just steps.** Each movement has a start state, a transition and an end state, with each limb's side and hold marked as stated, implied or inferred.
-- **A package for Climbing Logbook.** Climbing Logbook will use it as a versioned package, not a submodule.
+The design decisions are recorded as [ADRs](docs/adr/README.md):
+
+- [Rules first, no language model](docs/adr/0003-rules-first-no-language-model.md)
+- [The vocabulary is data, not code](docs/adr/0004-the-vocabulary-is-data.md)
+- [A flat, faceted taxonomy](docs/adr/0005-a-flat-faceted-taxonomy.md)
+- [Movements, not just steps](docs/adr/0006-movements-not-just-steps.md)
+- [A package for Climbing Logbook](docs/adr/0007-a-package-for-climbing-logbook.md)
 
 ## Using it
 
