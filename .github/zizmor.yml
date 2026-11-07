@@ -3,3 +3,7 @@ rules:
     config:
       # Long enough for a compromised release to be caught and pulled.
       days: 3
+  use-trusted-publishing:
+    ignore:
+      # GitHub Packages has no trusted publishing; the job-scoped GITHUB_TOKEN is its recommended route.
+      - release.yml
