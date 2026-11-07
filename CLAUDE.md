@@ -31,6 +31,7 @@ This project branched off from a Climbing Logbook (CL) session on 2026-10-23. CL
 - Branches are named by what the change does for users: `feature/`, `fix/`, `chore/`, `ci/`, `spike/`, `docs/`: [workflow](docs/workflow.md#branches).
 - Open every PR as a draft with its `release:` label set at creation, then mark it ready: [versioning](docs/versioning.md).
 - Work through the definition of done before marking a PR ready: [definition of done](docs/definition-of-done.md).
+- Merge a PR yourself once it meets the definition of done and CI is green; ask only when you need Raven's input: [workflow](docs/workflow.md#pull-requests).
 - Update a pushed branch by merging `main`, not rebasing: [workflow](docs/workflow.md#git).
 - Pace GitHub API mutations and never retry into a rate limit: [workflow](docs/workflow.md#github-api).
 - Propose before building when there's an open design question; concrete fixes with clear direction go straight ahead: [workflow](docs/workflow.md#ways-of-working).

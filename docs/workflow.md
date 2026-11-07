@@ -33,6 +33,9 @@ Name a branch by what the change does for users, with the issue number:
 - The PR body says what changed, the judgement calls made and why, and how
   it was verified. It is not a restatement of the diff.
 - Merges are squash only. The branch is deleted on merge.
+- Claude merges a PR once it meets the [definition of done](definition-of-done.md)
+  and every required check passes, including PRs that cut a release. It asks
+  first only when it needs Raven's input.
 
 ## Git
 
