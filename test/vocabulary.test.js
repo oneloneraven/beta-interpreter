@@ -42,6 +42,7 @@ describe("vocabulary", () => {
       crux: words.crux,
       moves: Object.keys(words.moves),
       qualifiers: words.qualifiers,
+      locations: Object.keys(words.locations ?? {}),
       filler: words.filler,
     };
     const seen = new Map();

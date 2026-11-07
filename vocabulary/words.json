@@ -97,9 +97,21 @@
     "deep",
     "sharp",
     "blunt",
-    "hard",
-    "back"
+    "hard"
   ],
+  "locations": {
+    "top": "on",
+    "bottom": "on",
+    "back": "on",
+    "side": "on",
+    "front": "on",
+    "upper": "on",
+    "under": "relative",
+    "below": "relative",
+    "above": "relative",
+    "behind": "relative",
+    "between": "relative"
+  },
   "filler": [
     "a",
     "an",
@@ -132,7 +144,6 @@
     "holds",
     "start",
     "finish",
-    "top",
     "then",
     "it's",
     "straight",

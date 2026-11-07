@@ -18,12 +18,22 @@
  *   crux: string[],
  *   moves: Record<string, string>,
  *   qualifiers: string[],
+ *   locations?: Record<string, string>,
  *   filler: string[],
  *   splitAlways: string[],
  *   splitBeforeMove: string[],
  * }} Words
  * @typedef {{ terms: Term[], words: Words }} Vocabulary
- * @typedef {{ role: string | null, ori: Term | null, kinds: Term[], qualifiers: string[], plural: string[] }} Hold
+ * @typedef {{ kind: "hold", hold: Hold } | { kind: "terrain", term: Term } | { kind: "limb", side: string | null, part: string }} Anchor
+ * @typedef {{
+ *   role: string | null,
+ *   ori: Term | null,
+ *   kinds: Term[],
+ *   qualifiers: string[],
+ *   plural: string[],
+ *   where: string[],
+ *   of: Anchor | null,
+ * }} Hold
  * @typedef {{ kind: "hold", hold: Hold } | { kind: "position", term: Term, role: string | null } | { kind: "transition", term: Term }} Part
  * @typedef {{
  *   side: string | null,
@@ -63,6 +73,8 @@
  *   | { kind: "crux" | "break" | "filler" }
  *   | { kind: "move", region: string }
  *   | { kind: "qualifier", word: string }
+ *   | { kind: "location", word: string }
+ *   | { kind: "anchor", side: string | null, part: string }
  *   | { kind: "unknown", raw: string, guess?: string }
  * )} Item
  */
@@ -114,6 +126,7 @@ export function createInterpreter({ terms, words }) {
   const crux = new Set(words.crux);
   const moveWords = new Map(Object.entries(words.moves));
   const qualifiers = new Set(words.qualifiers);
+  const locations = new Map(Object.entries(words.locations ?? {}));
   const filler = new Set(words.filler);
   const splitAlways = new Set(words.splitAlways);
   const splitBeforeMove = new Set(words.splitBeforeMove);
@@ -161,6 +174,7 @@ export function createInterpreter({ terms, words }) {
     crux.has(w) ||
     moveWords.has(w) ||
     qualifiers.has(w) ||
+    locations.has(w) ||
     splitBeforeMove.has(w) ||
     vocabWords.includes(w) ||
     !!lookup(w);
@@ -264,11 +278,13 @@ export function createInterpreter({ terms, words }) {
                   ? { kind: "move", region: /** @type {string} */ (moveWords.get(w)), ...at }
                   : qualifiers.has(w)
                     ? { kind: "qualifier", word: w, ...at }
-                    : splitBeforeMove.has(w)
-                      ? { kind: "break", ...at }
-                      : filler.has(w) || ignored.has(w)
-                        ? { kind: "filler", ...at }
-                        : { kind: "unknown", raw: tok.raw, guess: tok.guess, ...at };
+                    : locations.has(w)
+                      ? { kind: "location", word: w, ...at }
+                      : splitBeforeMove.has(w)
+                        ? { kind: "break", ...at }
+                        : filler.has(w) || ignored.has(w)
+                          ? { kind: "filler", ...at }
+                          : { kind: "unknown", raw: tok.raw, guess: tok.guess, ...at };
         }
         items.push(m);
         out.trace.push({
@@ -296,22 +312,44 @@ export function createInterpreter({ terms, words }) {
         issues: [],
         qualifiers: [],
       };
-      /** @type {{ side: string | null, part: string | null }[]} */
+      /** @type {{ side: string | null, part: string | null, from: number, to: number }[]} */
       const runs = [];
-      let inRun = false;
-      for (const m of items)
+      for (const [i, m] of items.entries())
         if (m.kind === "limb") {
-          if (!inRun) runs.push({ side: null, part: null });
-          inRun = true;
-          const run = runs[runs.length - 1];
-          run.side ||= m.side ?? null;
-          run.part ||= m.part ?? null;
-        } else {
-          inRun = false;
-          if (m.kind === "move") beat.move = m.region;
-        }
+          const run = runs.at(-1);
+          if (run && run.to === i - 1) run.to = i;
+          else runs.push({ side: null, part: null, from: i, to: i });
+          const r = /** @type {(typeof runs)[number]} */ (runs.at(-1));
+          r.side ||= m.side ?? null;
+          r.part ||= m.part ?? null;
+        } else if (m.kind === "move") beat.move = m.region;
       const named = runs.find(r => r.part) ?? runs[0];
       if (named) ({ side: beat.side, part: beat.part } = named);
+      /** @param {Item | undefined} m */
+      const holdish = m => m?.kind === "term" && ["hold", "feature", "orientation"].includes(facetOf(m.senses[0]));
+      /** @type {Map<number, Item>} */
+      const swaps = new Map();
+      for (const run of runs) {
+        if (run === named) continue;
+        let p = run.from - 1;
+        while (p >= 0 && items[p].kind === "filler") p--;
+        const afterLocation = items[p]?.kind === "location" || swaps.get(p)?.kind === "location";
+        const at = { n: 1, s: items[run.from].s, e: items[run.to].e };
+        /** @param {Item | undefined} m */
+        const word = m => (m ? norm(text.slice(m.s, m.e)) : "");
+        const prevWord = word(items[run.from - 1]);
+        if (run.part && afterLocation) swaps.set(run.to, { kind: "anchor", side: run.side, part: run.part, ...at });
+        else if (
+          !run.part &&
+          run.side &&
+          (afterLocation || prevWord === "the" || word(items[run.to + 1]) === "of" || holdish(items[run.to + 1]))
+        )
+          swaps.set(run.to, { kind: "location", word: run.side, ...at });
+      }
+      for (const run of runs.toReversed()) {
+        const swap = swaps.get(run.to);
+        if (swap) items.splice(run.from, run.to - run.from + 1, swap);
+      }
       if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
       let role = null;
@@ -322,13 +360,48 @@ export function createInterpreter({ terms, words }) {
       let rockRun = false;
       /** @type {string[]} */
       let pendingQ = [];
+      /** @type {string[]} */
+      let pendingLoc = [];
+      /** @type {Hold | null} */
+      let placed = null;
+      let fresh = true;
+      const placing = () =>
+        pendingLoc.length > 0 && (!!placed || pendingLoc.some(w => locations.get(w) === "relative"));
+      /** @param {Anchor} anchor */
+      const attach = anchor => {
+        if (placed) {
+          placed.where.push(...pendingLoc);
+          placed.of = anchor;
+        } else {
+          const hold = { role, ori: null, kinds: [], qualifiers: [], plural: [], where: pendingLoc, of: anchor };
+          beat.holds.push(hold);
+          beat.order.push({ kind: "hold", hold });
+        }
+        pendingLoc = [];
+      };
       for (const m of items) {
         if (m.kind === "limb") {
           out.spans.push({ s: m.s, e: m.e, facet: "limb" });
           continue;
         }
+        if (m.kind === "location") {
+          if (!pendingLoc.length) placed = fresh ? null : (beat.holds.at(-1) ?? null);
+          pendingLoc.push(m.word);
+          out.spans.push({ s: m.s, e: m.e, facet: "location" });
+          rockRun = false;
+          continue;
+        }
+        if (m.kind === "anchor") {
+          out.spans.push({ s: m.s, e: m.e, facet: "limb" });
+          if (pendingLoc.length) {
+            placed ??= beat.holds.at(-1) ?? null;
+            attach({ kind: "limb", side: m.side, part: m.part });
+          }
+          continue;
+        }
         if (m.kind === "prep") {
           role = m.role;
+          fresh = true;
           rockRun = false;
           beat.qualifiers.push(...pendingQ);
           pendingQ = [];
@@ -378,6 +451,8 @@ export function createInterpreter({ terms, words }) {
         const facet = facetOf(term);
         out.spans.push({ s: m.s, e: m.e, facet, term, ambiguous, fuzzy: m.fz.length > 0 });
         if (facet === "terrain") {
+          if (placing()) attach({ kind: "terrain", term });
+          else pendingLoc = [];
           if (!out.terrain.includes(term)) out.terrain.push(term);
           continue;
         }
@@ -387,12 +462,38 @@ export function createInterpreter({ terms, words }) {
           continue;
         }
         if (facet === "hold" || facet === "feature") {
+          if (placing()) {
+            last = {
+              role: null,
+              ori: pendingOri,
+              kinds: [term],
+              qualifiers: pendingQ,
+              plural: m.plural ? [term.id] : [],
+              where: [],
+              of: null,
+            };
+            attach({ kind: "hold", hold: last });
+            pendingOri = null;
+            pendingQ = [];
+            rockRun = true;
+            continue;
+          }
           if (rockRun && last) {
             last.kinds.push(term);
             last.qualifiers.push(...pendingQ);
             if (m.plural) last.plural.push(term.id);
           } else {
-            last = { role, ori: pendingOri, kinds: [term], qualifiers: pendingQ, plural: m.plural ? [term.id] : [] };
+            last = {
+              role,
+              ori: pendingOri,
+              kinds: [term],
+              qualifiers: pendingQ,
+              plural: m.plural ? [term.id] : [],
+              where: pendingLoc,
+              of: null,
+            };
+            pendingLoc = [];
+            fresh = false;
             beat.holds.push(last);
             beat.order.push({ kind: "hold", hold: last });
             pendingOri = null;
@@ -415,8 +516,9 @@ export function createInterpreter({ terms, words }) {
           beat.order.push({ kind: "transition", term });
         }
       }
+      (placed ?? beat.holds.at(-1))?.where.push(...pendingLoc);
       if (pendingOri) {
-        const hold = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ, plural: [] };
+        const hold = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ, plural: [], where: [], of: null };
         pendingQ = [];
         beat.holds.push(hold);
         beat.order.push({ kind: "hold", hold });
