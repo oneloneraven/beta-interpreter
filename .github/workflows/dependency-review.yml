@@ -1,16 +1,19 @@
 name: Dependency review
 
-# Fails a PR that adds a dependency with a known high or critical advisory, or a copyleft licence the project's
-# noncommercial licence can't carry. It only looks at what the PR changes, so existing dependencies don't block.
+# Copyleft licences are denied because the noncommercial licence cannot carry them.
 on:
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
