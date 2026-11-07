@@ -1,11 +1,12 @@
 version: 2
 updates:
-  # Covers pnpm-lock.yaml -- Dependabot's "npm" ecosystem type supports
-  # npm/yarn/pnpm lockfiles, there's no separate "pnpm" type.
+  # The "npm" ecosystem covers pnpm lockfiles.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "release: patch"
     cooldown:
       default-days: 3
     groups:
@@ -15,9 +16,13 @@ updates:
           - "patch"
 
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/*"
     schedule:
       interval: "weekly"
+    labels:
+      - "release: none"
     cooldown:
       default-days: 3
     groups:
