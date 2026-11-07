@@ -20,6 +20,7 @@
   --hold: #f3c66b;
   --orientation: #d6aee3;
   --qualifier: #bcc78e;
+  --location: #8fd0d6;
   --position: #a8dcb6;
   --transition: #f69c90;
   --limb: #d2d3cd;
@@ -55,6 +56,7 @@
     --hold: #946500;
     --orientation: #7c3f94;
     --qualifier: #5f6a26;
+    --location: #1f6f78;
     --position: #2b7546;
     --transition: #ad3e33;
     --limb: #4a4c47;
@@ -459,6 +461,10 @@ h2 {
 .f-qualifier,
 .k-qualifier {
   --c: var(--qualifier);
+}
+.f-location,
+.k-location {
+  --c: var(--location);
 }
 .f-transition {
   --c: var(--transition);

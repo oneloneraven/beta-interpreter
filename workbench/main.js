@@ -35,6 +35,7 @@ const SPECTRUM = [
   "hold",
   "orientation",
   "qualifier",
+  "location",
   "position",
   "transition",
   "limb",
@@ -50,6 +51,7 @@ const KIND_LABEL = {
   break: "join",
   move: "move",
   qualifier: "qualifier",
+  location: "location",
   filler: "filler",
   unknown: "unknown",
   split: "split",
@@ -520,7 +522,7 @@ function detailReading() {
 
 function legend() {
   return h("div", { class: "legend" }, [
-    ...["terrain", "feature", "hold", "orientation", "qualifier", "position", "transition", "limb"].map(f =>
+    ...["terrain", "feature", "hold", "orientation", "qualifier", "location", "position", "transition", "limb"].map(f =>
       h("span", { class: `key-chip f-${f}`, text: f }),
     ),
     h("span", { class: "key-chip k-unknown", text: "unknown" }),
