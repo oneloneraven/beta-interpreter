@@ -51,7 +51,7 @@ change that adds or moves a trust boundary ([coding standards](coding-standards.
 |---|---|---|---|
 | A published version not built from `main` | Spoofing | Only the release job publishes, from the merged commit, after the tests pass | Mitigated |
 | A web page posts to the workbench API and rewrites the vocabulary | Tampering | POSTs need the workbench's own origin and a JSON body; vocabulary changes still reach `main` only through a reviewed PR | Mitigated |
-| A compromised dependency alters the release | Tampering | Lockfile, three-day `minimumReleaseAge`, install scripts denied except esbuild, Dependabot and dependency review, actions pinned by SHA | Mitigated |
+| A compromised dependency alters the release | Tampering | Lockfile, three-day `minimumReleaseAge`, all install scripts denied, Dependabot and dependency review, actions pinned by SHA | Mitigated |
 | A release with no record of which PR caused it | Repudiation | Tags are cut only from merged PRs; GitHub Releases have generated notes | Mitigated |
 | Beta samples leak from the maintainer's machine or into the repository | Information disclosure | Saved outside any repository with mode 0600 | Mitigated, see [data protection](data-protection.md) for retention gaps |
 | Crafted beta text makes `parse` slow or crash in Climbing Logbook | Denial of service | Limited by the field length Climbing Logbook allows; no fuzzing yet (#21) | Open |
