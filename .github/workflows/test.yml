@@ -1,5 +1,6 @@
 name: Test
 
+# Required checks: the trigger stays unconditional, since a required check that never runs blocks the PR.
 on:
   pull_request:
 
