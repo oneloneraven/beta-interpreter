@@ -225,9 +225,46 @@ describe("where a hold is", () => {
   });
 
   it("ends a run of holds at an unknown word", () => {
+    const r = parse("Move left foot to flake zzqq rail");
+    expect([r.beats[0].holds.map(ids), r.unknown.map(u => u.raw)]).toEqual([[["flake"], ["rail"]], ["zzqq"]]);
+  });
+
+  it("reads locator words after a hold as where that hold is, not as another hold", () => {
     const r = parse("Move left foot to flake further up the rail");
-    expect([r.beats[0].holds.map(ids), r.unknown.map(u => u.raw)]).toEqual([[["flake"], ["rail"]], ["further"]]);
-    expect(say(r.beats[0])).toBe("Left foot: to a flake to a rail.");
+    const [flake] = r.beats[0].holds;
+    expect([
+      r.beats[0].holds.map(ids),
+      flake.where,
+      flake.of?.kind === "hold" && ids(flake.of.hold),
+      r.unknown,
+    ]).toEqual([[["flake"]], ["further", "up"], ["rail"], []]);
+    expect(say(r.beats[0])).toBe("Left foot: to a flake further up a rail.");
+  });
+
+  it("reads down and along as locator words", () => {
+    for (const [text, kind, where, anchor] of [
+      ["Right hand to the crimp down the arête", "crimp", "down", "arete"],
+      ["Left hand to the pinch along the lip", "pinch", "along", "lip"],
+    ]) {
+      const r = parse(text);
+      const [h] = r.beats[0].holds;
+      expect([r.beats[0].holds.map(ids), h.where, h.of?.kind === "hold" && ids(h.of.hold), r.unknown]).toEqual([
+        [[kind]],
+        [where],
+        [anchor],
+        [],
+      ]);
+    }
+  });
+
+  it("keeps a locator word's reading when no hold comes directly before it", () => {
+    const bump = parse("Bump right hand further up the rail");
+    expect([bump.beats[0].holds.map(ids), bump.beats[0].holds[0].where, bump.unknown.map(u => u.raw)]).toEqual([
+      [["rail"]],
+      [],
+      ["further"],
+    ]);
+    expect(holds("Reach up to the jug").map(h => [ids(h), h.where, h.of])).toEqual([[["jug"], [], null]]);
   });
 
   it("places a hold relative to terrain", () => {
