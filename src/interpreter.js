@@ -20,6 +20,7 @@
  *   qualifiers: string[],
  *   locations?: Record<string, string>,
  *   directions?: string[],
+ *   locators?: string[],
  *   filler: string[],
  *   splitAlways: string[],
  *   splitBeforeMove: string[],
@@ -130,6 +131,7 @@ export function createInterpreter({ terms, words }) {
   const qualifiers = new Set(words.qualifiers);
   const locations = new Map(Object.entries(words.locations ?? {}));
   const directions = new Set(words.directions);
+  const locators = new Set(words.locators);
   const filler = new Set(words.filler);
   const splitAlways = new Set(words.splitAlways);
   const splitBeforeMove = new Set(words.splitBeforeMove);
@@ -178,6 +180,7 @@ export function createInterpreter({ terms, words }) {
     moveWords.has(w) ||
     qualifiers.has(w) ||
     locations.has(w) ||
+    locators.has(w) ||
     splitBeforeMove.has(w) ||
     vocabWords.includes(w) ||
     !!lookup(w);
@@ -388,6 +391,22 @@ export function createInterpreter({ terms, words }) {
         if (m.fz.length) out.fuzzy.push({ from: m.fz.join(" "), to: m.key });
         for (const t of out.trace) if (t.s === m.s && t.kind === "term") t.kind = "qualifier";
       }
+      /** @param {Item | undefined} m */
+      const locator = m => !!m && m.kind !== "term" && locators.has(norm(text.slice(m.s, m.e)));
+      for (let i = 0; i < items.length; i++) {
+        if (!locator(items[i]) || !holdish(items[i - 1])) continue;
+        let j = i;
+        while (locator(items[j])) j++;
+        let k = j;
+        while (items[k]?.kind === "filler") k++;
+        if (!holdish(items[k])) continue;
+        for (let n = i; n < j; n++) {
+          const m = items[n];
+          items[n] = { kind: "location", word: norm(text.slice(m.s, m.e)), n: m.n, s: m.s, e: m.e };
+          for (const t of out.trace) if (t.s === m.s) t.kind = "location";
+        }
+        i = j;
+      }
       if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
       let role = null;
@@ -425,6 +444,14 @@ export function createInterpreter({ terms, words }) {
           continue;
         }
         if (m.kind === "location") {
+          if (!pendingLoc.length && pendingOri) {
+            last = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ, plural: [], where: [], of: null };
+            beat.holds.push(last);
+            beat.order.push({ kind: "hold", hold: last });
+            pendingOri = null;
+            pendingQ = [];
+            fresh = false;
+          }
           if (!pendingLoc.length) placed = fresh ? null : (beat.holds.at(-1) ?? null);
           pendingLoc.push(m.word);
           out.spans.push({ s: m.s, e: m.e, facet: "location" });

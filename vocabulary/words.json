@@ -114,6 +114,7 @@
     "between": "relative"
   },
   "directions": ["vertical"],
+  "locators": ["up", "down", "along", "further"],
   "filler": [
     "a",
     "an",
