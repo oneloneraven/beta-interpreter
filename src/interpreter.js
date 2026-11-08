@@ -182,6 +182,29 @@ export function createInterpreter({ terms, words }) {
     vocabWords.includes(w) ||
     !!lookup(w);
 
+  /** @param {string} w */
+  const guess = w => {
+    const near = w.length >= 4 ? nearest(w) : null;
+    return near && (near.d === 1 || w.length >= 6) ? near : null;
+  };
+
+  /** @param {string} w */
+  function split(w) {
+    /** @type {{ w: string, d: number } | null} */
+    let best = null;
+    for (let i = 1; i < w.length; i++) {
+      const [a, b] = [w.slice(0, i), w.slice(i)];
+      const left = known(a) ? { w: a, d: 0 } : null;
+      const right = known(b) ? { w: b, d: 0 } : null;
+      const halves = left && right ? [left, right] : left ? [left, guess(b)] : right ? [guess(a), right] : [];
+      const [x, y] = halves;
+      if (!x || !y) continue;
+      const d = x.d + y.d;
+      if (!best || d < best.d) best = { w: `${x.w} ${y.w}`, d };
+    }
+    return best;
+  }
+
   /** @param {string} key @param {string | null} named */
   const startsStep = (key, named) => {
     if (moveWords.has(key)) return true;
@@ -211,6 +234,7 @@ export function createInterpreter({ terms, words }) {
           tok.fz = raw;
           tok.n = near.w;
         } else if (near && (near.d === 1 || n.length >= 6)) tok.guess = near.w;
+        else tok.guess = split(n)?.w;
       }
       toks.push(tok);
     }
