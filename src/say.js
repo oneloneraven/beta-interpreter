@@ -86,6 +86,6 @@ export function say(b) {
   const actions = names.join(", ");
   const body = [actions, ...b.holds.map(holdPhrase)].filter(Boolean).join(" ");
   const w = who(b);
-  if (w) return `${w}: ${body}.`;
+  if (w) return body ? `${w}: ${body}.` : `${w}.`;
   return body ? `${cap(body)}.` : "";
 }
