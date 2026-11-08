@@ -24,6 +24,10 @@ describe("parse", () => {
     expect(r.beats.map(b => b.unread)).toEqual([true]);
   });
 
+  it("says a step that only names a limb without a dangling full stop", () => {
+    expect(parse("Left foot?").beats.map(say)).toEqual(["Left foot."]);
+  });
+
   it("splits on 'and' before a transition", () => {
     expect(parse("match and rock over").beats.map(say)).toEqual(["Match.", "Rockover."]);
   });
