@@ -1438,6 +1438,16 @@ button.pill:hover {
   opacity: 0.45;
 }
 
+.limb.carried {
+  opacity: 0.55;
+}
+
+.limb.key-limb {
+  display: inline-block;
+  min-block-size: 0;
+  padding: 0 6px;
+}
+
 .who {
   display: flex;
   align-items: center;

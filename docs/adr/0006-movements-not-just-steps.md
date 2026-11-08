@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted. Its partial states are amended by [ADR-0008](0008-carry-unmentioned-limbs-over.md).
 
 ## Context
 

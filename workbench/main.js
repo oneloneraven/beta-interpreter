@@ -148,7 +148,10 @@ function metrics() {
   const q = state.questions;
   if (!r || !rec || !q) return null;
   const words = r.trace.filter(t => t.kind !== "split");
-  const contacts = rec.movements.flatMap(m => [m.start, m.end]).flatMap(st => Object.values(st.limbs));
+  const contacts = rec.movements
+    .flatMap(m => [m.start, m.end])
+    .flatMap(st => Object.values(st.limbs))
+    .filter(c => !c?.carried);
   return {
     tokens: words.length,
     recognised: words.length ? (words.length - r.unknown.length) / words.length : 1,
@@ -742,19 +745,23 @@ const prov = source =>
 function limbCell(key, c) {
   if (!c) return h("div", { class: "limb empty" }, [h("span", { class: "who", text: key.toUpperCase() })]);
   const hold = holdText(c.hold);
-  return h("div", { class: "limb", title: LIMB_NAME[key] }, [
-    h("span", { class: "who" }, [key.toUpperCase(), prov(c.side)]),
-    hold
-      ? h("span", {
-          class: `hold${c.holdSource === "inferred" ? " inferred" : ""}`,
-          title: `Hold ${c.holdSource}`,
-          text: hold,
-        })
-      : "",
-    c.techniques.length
-      ? h("span", { class: "tech", text: c.techniques.map(t => t.name.toLowerCase()).join(", ") })
-      : "",
-  ]);
+  return h(
+    "div",
+    { class: `limb${c.carried ? " carried" : ""}`, title: `${LIMB_NAME[key]}${c.carried ? ", carried over" : ""}` },
+    [
+      h("span", { class: "who" }, [key.toUpperCase(), prov(c.side)]),
+      hold
+        ? h("span", {
+            class: `hold${c.holdSource === "inferred" ? " inferred" : ""}`,
+            title: `Hold ${c.holdSource}`,
+            text: hold,
+          })
+        : "",
+      c.techniques.length
+        ? h("span", { class: "tech", text: c.techniques.map(t => t.name.toLowerCase()).join(", ") })
+        : "",
+    ],
+  );
 }
 
 /** @param {State} st @param {string} label */
@@ -791,6 +798,7 @@ function detailMovements() {
     h("span", {}, [prov("implied"), "implied by the term"]),
     h("span", {}, [prov("inferred"), "inferred"]),
     h("span", {}, [h("span", { class: "hold inferred", text: "hold" }), "inferred hold"]),
+    h("span", {}, [h("span", { class: "limb carried key-limb", text: "LH" }), "carried over"]),
   ]);
   const climb = h("div", { class: "climb" }, [
     h("span", { class: "state-label", text: "Terrain" }),

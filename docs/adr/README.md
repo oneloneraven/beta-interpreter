@@ -16,3 +16,4 @@ old one's status becomes "Superseded by ADR-NNNN".
 | [0005](0005-a-flat-faceted-taxonomy.md) | A flat, faceted taxonomy |
 | [0006](0006-movements-not-just-steps.md) | Movements, not just steps |
 | [0007](0007-a-package-for-climbing-logbook.md) | A package for Climbing Logbook |
+| [0008](0008-carry-unmentioned-limbs-over.md) | Carry unmentioned limbs over between movements |
