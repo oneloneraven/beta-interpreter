@@ -53,6 +53,7 @@ const grammar = words => [
   ["location word", Object.keys(words.locations ?? {})],
   ["direction word", words.directions ?? []],
   ["locator word", words.locators ?? []],
+  ["extent word", words.extents ?? []],
   ["filler word", words.filler],
 ];
 

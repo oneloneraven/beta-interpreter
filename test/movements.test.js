@@ -188,6 +188,11 @@ describe("toMovements", () => {
     expect(r.movements.map(m => m.steps)).toEqual([[0], [1]]);
   });
 
+  it("records how far a move goes on its transition", () => {
+    const r = toMovements(parse("Left hand to the jug. Bump right hand further up the rail"));
+    expect(r.movements.map(m => m.transition?.extent)).toEqual([[], ["further"]]);
+  });
+
   it("records each stated wall angle against its movement, and infers none", () => {
     const r = toMovements(
       parse("Left hand to the jug on the slab. Right hand to the crimp in the roof. Left hand to the rail"),

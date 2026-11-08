@@ -21,6 +21,7 @@
  *   locations?: Record<string, string>,
  *   directions?: string[],
  *   locators?: string[],
+ *   extents?: string[],
  *   filler: string[],
  *   splitAlways: string[],
  *   splitBeforeMove: string[],
@@ -50,6 +51,7 @@
  *   move?: string | null,
  *   qualifiers: string[],
  *   terrain: Term[],
+ *   extent: string[],
  *   unread?: boolean,
  * }} Beat
  * @typedef {{ s: number, e: number, facet: string, term?: Term, ambiguous?: boolean, fuzzy?: boolean }} Span
@@ -132,6 +134,7 @@ export function createInterpreter({ terms, words }) {
   const locations = new Map(Object.entries(words.locations ?? {}));
   const directions = new Set(words.directions);
   const locators = new Set(words.locators);
+  const extents = new Set(words.extents);
   const filler = new Set(words.filler);
   const splitAlways = new Set(words.splitAlways);
   const splitBeforeMove = new Set(words.splitBeforeMove);
@@ -344,6 +347,7 @@ export function createInterpreter({ terms, words }) {
         issues: [],
         qualifiers: [],
         terrain: [],
+        extent: [],
       };
       /** @type {{ side: string | null, part: string | null, from: number, to: number }[]} */
       const runs = [];
@@ -397,16 +401,24 @@ export function createInterpreter({ terms, words }) {
       }
       /** @param {Item | undefined} m */
       const locator = m => !!m && m.kind !== "term" && locators.has(norm(text.slice(m.s, m.e)));
+      /** @type {Set<Item>} */
+      const fromLimb = new Set();
       for (let i = 0; i < items.length; i++) {
-        if (!locator(items[i]) || !holdish(items[i - 1])) continue;
+        if (!locator(items[i])) continue;
         let j = i;
         while (locator(items[j])) j++;
         let k = j;
         while (items[k]?.kind === "filler") k++;
-        if (!holdish(items[k])) continue;
+        const run = items.slice(i, j).map(m => norm(text.slice(m.s, m.e)));
+        const fromHere = !holdish(items[i - 1]) && run.some(w => extents.has(w));
+        if (!holdish(items[k]) || (!holdish(items[i - 1]) && !fromHere)) continue;
+        if (fromHere) {
+          beat.extent.push(...run.filter(w => extents.has(w)));
+          fromLimb.add(items[k]);
+        }
         for (let n = i; n < j; n++) {
           const m = items[n];
-          items[n] = { kind: "location", word: norm(text.slice(m.s, m.e)), n: m.n, s: m.s, e: m.e };
+          items[n] = { kind: "location", word: run[n - i], n: m.n, s: m.s, e: m.e };
           for (const t of out.trace) if (t.s === m.s) t.kind = "location";
         }
         i = j;
@@ -563,7 +575,7 @@ export function createInterpreter({ terms, words }) {
               qualifiers: pendingQ,
               plural: m.plural ? [term.id] : [],
               where: pendingLoc,
-              of: null,
+              of: fromLimb.has(m) && beat.part ? { kind: "limb", side: beat.side, part: beat.part } : null,
             };
             pendingLoc = [];
             fresh = false;

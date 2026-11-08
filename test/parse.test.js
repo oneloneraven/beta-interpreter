@@ -278,14 +278,32 @@ describe("where a hold is", () => {
     }
   });
 
-  it("keeps a locator word's reading when no hold comes directly before it", () => {
-    const bump = parse("Bump right hand further up the rail");
-    expect([bump.beats[0].holds.map(ids), bump.beats[0].holds[0].where, bump.unknown.map(u => u.raw)]).toEqual([
-      [["rail"]],
-      [],
-      ["further"],
-    ]);
+  it("keeps a locator word's reading when no hold or extent comes before it", () => {
     expect(holds("Reach up to the jug").map(h => [ids(h), h.where, h.of])).toEqual([[["jug"], [], null]]);
+    expect(holds("Left hand paddle up the rail").map(h => [ids(h), h.where, h.of])).toEqual([[["rail"], [], null]]);
+  });
+
+  it("reads further as how far the move goes, and further up as where the hold is from the moving limb", () => {
+    const r = parse("Bump right hand further up the rail");
+    const [rail] = r.beats[0].holds;
+    expect([r.beats[0].holds.map(ids), rail.where, rail.of, r.beats[0].extent, r.unknown]).toEqual([
+      [["rail"]],
+      ["further", "up"],
+      { kind: "limb", side: "right", part: "hand" },
+      ["further"],
+      [],
+    ]);
+    expect(say(r.beats[0])).toBe("Right hand: bump to a rail further up from the right hand.");
+  });
+
+  it("says a hold placed relative to a limb without 'from' unless it's a direction", () => {
+    expect(parse("Left foot to the crimp under the left hand").beats.map(say)).toEqual([
+      "Left foot: to a crimp under the left hand.",
+    ]);
+  });
+
+  it("records no extent when further places a hold relative to another hold", () => {
+    expect(parse("Move left foot to flake further up the rail").beats[0].extent).toEqual([]);
   });
 
   it("places a hold relative to terrain", () => {
