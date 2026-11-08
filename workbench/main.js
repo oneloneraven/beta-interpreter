@@ -687,7 +687,7 @@ function detailQuestions() {
   return [h("div", { class: "pane-grid" }, out)];
 }
 
-/** @typedef {{ list: string, region?: string, label: string }} TeachOption */
+/** @typedef {{ list: string, region?: string | null, label: string }} TeachOption */
 /** @type {TeachOption[]} */
 const TEACH = [
   { list: "filler", label: "filler" },
@@ -695,6 +695,7 @@ const TEACH = [
   { list: "moves", region: "upper", label: "hand move" },
   { list: "moves", region: "lower", label: "foot move" },
   { list: "moves", region: "full", label: "full-body move" },
+  { list: "moves", region: null, label: "move word for any limb" },
 ];
 
 /** @param {TeachOption} option @param {string[]} items */
