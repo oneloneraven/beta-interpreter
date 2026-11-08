@@ -444,6 +444,14 @@ export function createInterpreter({ terms, words }) {
           continue;
         }
         if (m.kind === "location") {
+          if (!pendingLoc.length && pendingOri) {
+            last = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ, plural: [], where: [], of: null };
+            beat.holds.push(last);
+            beat.order.push({ kind: "hold", hold: last });
+            pendingOri = null;
+            pendingQ = [];
+            fresh = false;
+          }
           if (!pendingLoc.length) placed = fresh ? null : (beat.holds.at(-1) ?? null);
           pendingLoc.push(m.word);
           out.spans.push({ s: m.s, e: m.e, facet: "location" });

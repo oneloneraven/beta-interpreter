@@ -241,6 +241,17 @@ describe("where a hold is", () => {
     expect(say(r.beats[0])).toBe("Left foot: to a flake further up a rail.");
   });
 
+  it("places an orientation named just before locator words", () => {
+    const [sidepull, ...rest] = holds("Right hand to the sidepull up the arête");
+    expect([
+      sidepull.ori?.id,
+      ids(sidepull),
+      sidepull.where,
+      sidepull.of?.kind === "hold" && ids(sidepull.of.hold),
+      rest,
+    ]).toEqual(["sidepull", [], ["up"], ["arete"], []]);
+  });
+
   it("reads down and along as locator words", () => {
     for (const [text, kind, where, anchor] of [
       ["Right hand to the crimp down the arête", "crimp", "down", "arete"],
