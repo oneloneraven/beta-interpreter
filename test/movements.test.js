@@ -243,6 +243,13 @@ describe("toMovements", () => {
     expect(Object.keys(second.end.limbs).sort()).toEqual(["lf", "lh", "rf", "rh"]);
   });
 
+  it("doesn't carry a limb into a start that has an unsettled limb of that part", () => {
+    const [, m] = read(
+      "Both hands on the jug, then right foot to the edge, then hand on the pinch, then deadpoint to the lip",
+    );
+    expect([Object.keys(m.start.limbs), m.start.unplaced.map(u => u.part)]).toEqual([["rf"], ["hand"]]);
+  });
+
   it("doesn't carry a limb into the end when an unsettled limb of that part moved", () => {
     const [m] = read("Both hands on the jug, then dyno to the lip");
     expect([Object.keys(m.end.limbs), m.end.unplaced.map(u => u.part)]).toEqual([[], ["hand"]]);

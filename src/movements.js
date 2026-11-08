@@ -101,7 +101,8 @@ function carryOver(movements) {
   let carry = {};
   for (const m of movements) {
     for (const [key, c] of /** @type {[LimbKey, Contact][]} */ (Object.entries(carry)))
-      if (c && !m.start.limbs[key]) m.start.limbs[key] = copy(c, true);
+      if (c && !m.start.limbs[key] && !m.start.unplaced.some(u => u.part === partOf(key)))
+        m.start.limbs[key] = copy(c, true);
     if (m.transition)
       for (const [key, c] of /** @type {[LimbKey, Contact][]} */ (Object.entries(m.start.limbs)))
         if (

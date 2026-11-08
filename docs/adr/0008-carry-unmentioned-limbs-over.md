@@ -21,8 +21,8 @@ end is that start with the moving limbs updated, so both states are
 complete. A carried limb keeps its hold and techniques, and its contact is
 marked `carried: true` while keeping its original side and hold
 provenance. Unplaced limbs and full-body techniques aren't carried, and no
-limb is carried into an end whose moving limb of the same part isn't
-settled.
+limb is carried into a state that has an unplaced limb of the same part,
+since that limb may be the one carried.
 
 ## Consequences
 
