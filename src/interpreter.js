@@ -357,16 +357,15 @@ export function createInterpreter({ terms, words }) {
           for (const t of out.trace) if (t.s >= swap.s && t.e <= swap.e && t.kind === "limb") t.kind = "location";
         items.splice(run.from, run.to - run.from + 1, swap);
       }
-      for (const [i, m] of items.entries())
-        if (m.kind === "term" && directions.has(m.key) && holdish(items[i + 1])) {
-          items[i] = { kind: "qualifier", word: m.key, n: m.n, s: m.s, e: m.e };
-          for (const t of out.trace)
-            if (t.s === m.s && t.kind === "term") {
-              t.kind = "qualifier";
-              delete t.key;
-              delete t.fuzzy;
-            }
-        }
+      for (const [i, m] of items.entries()) {
+        if (m.kind !== "term" || !directions.has(m.key)) continue;
+        let j = i + 1;
+        while (items[j]?.kind === "qualifier") j++;
+        if (!holdish(items[j])) continue;
+        items[i] = { kind: "qualifier", word: m.key, n: m.n, s: m.s, e: m.e };
+        if (m.fz.length) out.fuzzy.push({ from: m.fz.join(" "), to: m.key });
+        for (const t of out.trace) if (t.s === m.s && t.kind === "term") t.kind = "qualifier";
+      }
       if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
       let role = null;

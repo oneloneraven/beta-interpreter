@@ -43,6 +43,7 @@ describe("vocabulary", () => {
       moves: Object.keys(words.moves),
       qualifiers: words.qualifiers,
       locations: Object.keys(words.locations ?? {}),
+      directions: words.directions ?? [],
       filler: words.filler,
     };
     const seen = new Map();

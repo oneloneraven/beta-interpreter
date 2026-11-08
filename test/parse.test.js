@@ -340,6 +340,15 @@ describe("wall angles", () => {
     expect(say(r.beats[0])).toBe("Left foot: on a vertical edge.");
   });
 
+  it("reads a direction word as describing the hold across a qualifier", () => {
+    const r = parse("Left hand on the vertical sharp edge");
+    expect([ids(r.terrain), r.beats[0].holds[0].qualifiers]).toEqual([[], ["vertical", "sharp"]]);
+  });
+
+  it("keeps the typo notice when a corrected direction word describes a hold", () => {
+    expect(parse("Left foot on verticle edge").fuzzy).toEqual([{ from: "verticle", to: "vertical" }]);
+  });
+
   it("still reads a direction word on its own as a wall angle", () => {
     expect(ids(parse("Left hand up the vertical wall to the jug").terrain)).toEqual(["vert"]);
   });
