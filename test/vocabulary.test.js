@@ -56,8 +56,8 @@ describe("vocabulary", () => {
     expect(words.filler.filter(w => phrases.has(w))).toEqual([]);
   });
 
-  it("gives every move word a taxonomy region", () => {
+  it("gives every move word a taxonomy region, or none when it moves any limb", () => {
     for (const [w, region] of Object.entries(words.moves))
-      expect([w, REGIONS]).toEqual([w, expect.arrayContaining([region])]);
+      expect([w, [...REGIONS, null]]).toEqual([w, expect.arrayContaining([region])]);
   });
 });

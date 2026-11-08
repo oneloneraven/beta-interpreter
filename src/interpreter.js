@@ -16,7 +16,7 @@
  *   limbs: Record<string, Limb>,
  *   prepositions: Record<string, string>,
  *   crux: string[],
- *   moves: Record<string, string>,
+ *   moves: Record<string, string | null>,
  *   qualifiers: string[],
  *   locations?: Record<string, string>,
  *   directions?: string[],
@@ -46,7 +46,7 @@
  *   crux: boolean,
  *   issues: string[],
  *   clause: number,
- *   move?: string,
+ *   move?: string | null,
  *   qualifiers: string[],
  *   terrain: Term[],
  *   unread?: boolean,
@@ -73,7 +73,7 @@
  *   | { kind: "limb", side?: string, part?: string }
  *   | { kind: "prep", role: string }
  *   | { kind: "crux" | "break" | "filler" }
- *   | { kind: "move", region: string }
+ *   | { kind: "move", region: string | null }
  *   | { kind: "qualifier", word: string }
  *   | { kind: "location", word: string }
  *   | { kind: "anchor", side: string | null, part: string }
@@ -278,7 +278,7 @@ export function createInterpreter({ terms, words }) {
               : crux.has(w)
                 ? { kind: "crux", ...at }
                 : moveWords.has(w)
-                  ? { kind: "move", region: /** @type {string} */ (moveWords.get(w)), ...at }
+                  ? { kind: "move", region: moveWords.get(w) ?? null, ...at }
                   : qualifiers.has(w)
                     ? { kind: "qualifier", word: w, ...at }
                     : locations.has(w)
@@ -326,7 +326,7 @@ export function createInterpreter({ terms, words }) {
           const r = /** @type {(typeof runs)[number]} */ (runs.at(-1));
           r.side ||= m.side ?? null;
           r.part ||= m.part ?? null;
-        } else if (m.kind === "move") beat.move = m.region;
+        } else if (m.kind === "move" && (m.region || beat.move === undefined)) beat.move = m.region;
       const named = runs.find(r => r.part) ?? runs[0];
       if (named) ({ side: beat.side, part: beat.part } = named);
       /** @param {Item | undefined} m */
@@ -554,10 +554,10 @@ export function createInterpreter({ terms, words }) {
           beat.order = beat.order.filter(o => o.kind !== "position" || !parts.includes(o.term));
           break;
         }
-      for (const h of beat.holds) h.role ||= beat.moves.length || beat.move ? "target" : "on";
+      for (const h of beat.holds) h.role ||= beat.moves.length || beat.move !== undefined ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";
-      if (!beat.moves.length && !beat.pos.length && !beat.side && !beat.part) {
+      if (!beat.moves.length && beat.move === undefined && !beat.pos.length && !beat.side && !beat.part) {
         if (items.some(m => m.kind === "unknown")) {
           beat.unread = true;
           out.beats.push(beat);

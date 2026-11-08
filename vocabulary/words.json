@@ -80,7 +80,8 @@
     "reach": "upper",
     "catch": "upper",
     "grab": "upper",
-    "stomp": "lower"
+    "stomp": "lower",
+    "place": null
   },
   "qualifiers": [
     "high",
@@ -144,6 +145,7 @@
     "hold",
     "holds",
     "start",
+    "starting",
     "finish",
     "then",
     "it's",
