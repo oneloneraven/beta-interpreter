@@ -412,6 +412,13 @@ describe("words from the Years Around the Sun beta", () => {
     expect([r.unknown, r.beats[0].side, r.beats[0].part, r.beats[0].move]).toEqual([[], "right", "foot", null]);
   });
 
+  it("names a place by the limb it moves, and keeps a region another move word gives", () => {
+    expect(parse("Place right heel in the gully").beats.map(say)).toEqual([
+      "Right foot: foot move, heel hook on a gully.",
+    ]);
+    expect(parse("Reach up to place it on the jug").beats.map(b => [b.move, b.part])).toEqual([["upper", "hand"]]);
+  });
+
   it("keeps a place with no limb named as a step", () => {
     expect(parse("Place on the jug").beats.map(say)).toEqual(["Move on a jug."]);
   });

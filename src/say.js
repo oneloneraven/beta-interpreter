@@ -8,6 +8,8 @@ const ROLE = { start: "from", target: "to", on: "on" };
 const PLURAL = { foot: "feet" };
 /** @type {Record<string, string>} */
 const MOVE_NAME = { upper: "hand move", lower: "foot move", full: "full-body move" };
+/** @type {Record<string, string>} */
+const PART_REGION = { hand: "upper", foot: "lower", leg: "lower", body: "full" };
 /** @param {string} s */
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
@@ -79,7 +81,8 @@ function holdPhrase(h) {
 /** @param {Beat} b */
 export function say(b) {
   const names = [...b.moves, ...b.pos].map(x => x.name.toLowerCase());
-  if (b.move !== undefined && !b.moves.length) names.unshift(MOVE_NAME[b.move ?? ""] ?? "move");
+  if (b.move !== undefined && !b.moves.length)
+    names.unshift(MOVE_NAME[b.move ?? PART_REGION[b.part ?? ""] ?? ""] ?? "move");
   const actions = names.join(", ");
   const body = [actions, ...b.holds.map(holdPhrase)].filter(Boolean).join(" ");
   const w = who(b);

@@ -326,7 +326,7 @@ export function createInterpreter({ terms, words }) {
           const r = /** @type {(typeof runs)[number]} */ (runs.at(-1));
           r.side ||= m.side ?? null;
           r.part ||= m.part ?? null;
-        } else if (m.kind === "move") beat.move = m.region;
+        } else if (m.kind === "move" && (m.region || beat.move === undefined)) beat.move = m.region;
       const named = runs.find(r => r.part) ?? runs[0];
       if (named) ({ side: beat.side, part: beat.part } = named);
       /** @param {Item | undefined} m */
