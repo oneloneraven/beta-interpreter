@@ -115,6 +115,18 @@
       "match": ["nose"]
     },
     {
+      "id": "prow",
+      "name": "Prow",
+      "facets": ["feature"],
+      "match": ["prow"]
+    },
+    {
+      "id": "gully",
+      "name": "Gully",
+      "facets": ["feature"],
+      "match": ["gully", "gulley"]
+    },
+    {
       "id": "arete",
       "name": "Arête",
       "facets": ["feature"],
@@ -170,7 +182,7 @@
       "id": "sloper",
       "name": "Sloper",
       "facets": ["hold"],
-      "match": ["sloper", "slopey", "slopy"]
+      "match": ["sloper", "slopey", "slopy", "sloping"]
     },
     {
       "id": "crimp",
@@ -307,7 +319,7 @@
       "facets": ["position"],
       "region": "upper",
       "part": "hand",
-      "match": ["palm down", "palm", "palming"]
+      "match": ["palm down", "palm", "palming", "press"]
     },
     {
       "id": "compression-hands",
@@ -515,6 +527,23 @@
       "match": ["smear", "smearing"]
     },
     {
+      "id": "press",
+      "name": "Press",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["press", "foot press"]
+    },
+    {
+      "id": "toe-press",
+      "name": "Toe press",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "press",
+      "match": ["toe press"]
+    },
+    {
       "id": "stand",
       "name": "Stand",
       "facets": ["position"],
@@ -597,6 +626,14 @@
       "region": "full",
       "part": "body",
       "match": ["overhead press"]
+    },
+    {
+      "id": "twist",
+      "name": "Twist",
+      "facets": ["position"],
+      "region": "full",
+      "part": "body",
+      "match": ["twist", "twisting"]
     },
     {
       "id": "paddle",

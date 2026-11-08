@@ -79,7 +79,7 @@ function holdPhrase(h) {
 /** @param {Beat} b */
 export function say(b) {
   const names = [...b.moves, ...b.pos].map(x => x.name.toLowerCase());
-  if (b.move && !b.moves.length) names.unshift(MOVE_NAME[b.move] ?? "move");
+  if (b.move !== undefined && !b.moves.length) names.unshift(MOVE_NAME[b.move ?? ""] ?? "move");
   const actions = names.join(", ");
   const body = [actions, ...b.holds.map(holdPhrase)].filter(Boolean).join(" ");
   const w = who(b);

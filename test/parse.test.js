@@ -308,7 +308,7 @@ describe("a toe on a hold", () => {
       holds: [["pebble"]],
       said: "Left foot: toe on a pebble.",
     });
-    expect(step("Move right foot to press toe on horn")).toMatchObject({ pos: ["toe"], holds: [["horn"]] });
+    expect(step("Move right foot to press toe on horn")).toMatchObject({ pos: ["press", "toe"], holds: [["horn"]] });
   });
 
   it("reads bare toes as a toe on the hold", () => {
@@ -337,7 +337,7 @@ describe("wall angles", () => {
   it("reads a direction word before a hold as describing the hold, not the wall", () => {
     const r = parse("Left foot press on vertical edge");
     expect([ids(r.terrain), ids(r.beats[0].terrain), r.beats[0].holds[0].qualifiers]).toEqual([[], [], ["vertical"]]);
-    expect(say(r.beats[0])).toBe("Left foot: on a vertical edge.");
+    expect(say(r.beats[0])).toBe("Left foot: press on a vertical edge.");
   });
 
   it("reads a direction word as describing the hold across a qualifier", () => {
@@ -366,5 +366,53 @@ describe("wall angles", () => {
   it("keeps a scene-setting wall angle at climb level only", () => {
     const r = parse("Overhanging arête. Left hand to the jug");
     expect([ids(r.terrain), r.beats.map(b => ids(b.terrain))]).toEqual([["overhang"], [[]]]);
+  });
+});
+
+describe("words from the Years Around the Sun beta", () => {
+  /** @param {string} text */
+  const read = text => {
+    const r = parse(text);
+    return { unknown: r.unknown.map(u => u.raw), beats: r.beats.map(say), features: r.features.map(t => t.id) };
+  };
+
+  it("reads sloping as a sloper", () => {
+    expect(read("Left hand to the sloping rail")).toMatchObject({
+      unknown: [],
+      beats: ["Left hand: to a sloper rail."],
+    });
+  });
+
+  it("reads prow and gully as features", () => {
+    expect(read("Prow. Gully. Gulley")).toMatchObject({ unknown: [], features: ["prow", "gully"] });
+  });
+
+  it("reads a foot press as a press, narrowed from a hand press by the limb", () => {
+    expect(parse("Left foot press on the edge").beats[0].pos.map(t => t.id)).toEqual(["press"]);
+    expect(parse("Right hand press on the ledge").beats[0].pos.map(t => t.id)).toEqual(["palm-down"]);
+    expect(parse("press on the edge").amb.map(a => a.options.map(o => o.id))).toEqual([["palm-down", "press"]]);
+  });
+
+  it("reads a toe press as a kind of press", () => {
+    const [toePress] = parse("Right toe press on the edge").beats[0].pos;
+    expect([toePress.id, toePress.parent]).toEqual(["toe-press", "press"]);
+  });
+
+  it("reads twist as a full-body position", () => {
+    const [twist] = parse("Twist into the wall").beats[0].pos;
+    expect([twist.id, twist.region, twist.part]).toEqual(["twist", "full", "body"]);
+  });
+
+  it("reads starting as filler", () => {
+    expect(read("Left hand on the starting jug")).toMatchObject({ unknown: [], beats: ["Left hand: on a jug."] });
+  });
+
+  it("reads place as a move word with no region of its own", () => {
+    const r = parse("Place right heel in the gully");
+    expect([r.unknown, r.beats[0].side, r.beats[0].part, r.beats[0].move]).toEqual([[], "right", "foot", null]);
+  });
+
+  it("keeps a place with no limb named as a step", () => {
+    expect(parse("Place on the jug").beats.map(say)).toEqual(["Move on a jug."]);
   });
 });
