@@ -182,11 +182,10 @@ export function createInterpreter({ terms, words }) {
     vocabWords.includes(w) ||
     !!lookup(w);
 
+  /** @param {{ w: string, d: number } | null} near @param {string} w */
+  const likely = (near, w) => (near && (near.d === 1 || w.length >= 6) ? near : null);
   /** @param {string} w */
-  const guess = w => {
-    const near = w.length >= 4 ? nearest(w) : null;
-    return near && (near.d === 1 || w.length >= 6) ? near : null;
-  };
+  const guess = w => (w.length >= 4 ? likely(nearest(w), w) : null);
 
   /** @param {string} w */
   function split(w) {
@@ -233,8 +232,7 @@ export function createInterpreter({ terms, words }) {
         if (near && ((n.length >= 5 && near.d === 1) || (n.length >= 8 && near.d === 2))) {
           tok.fz = raw;
           tok.n = near.w;
-        } else if (near && (near.d === 1 || n.length >= 6)) tok.guess = near.w;
-        else tok.guess = split(n)?.w;
+        } else tok.guess = likely(near, n)?.w ?? split(n)?.w;
       }
       toks.push(tok);
     }
