@@ -21,11 +21,12 @@ The design decisions are recorded as [ADRs](docs/adr/README.md):
 Each release is published to GitHub Packages as `@ravendarque/beta-interpreter`, and its packed tarball is attached to the GitHub Release.
 
 ```js
-import { parse, say, toMovements } from "@ravendarque/beta-interpreter";
+import { parse, say, toMovements, version } from "@ravendarque/beta-interpreter";
 
 const reading = parse("left hand on the crimp, then fire up for the hero jug");
 reading.beats.map(say); // ["Left hand: on a crimp.", "Fire up to a jug."]
 toMovements(reading).movements; // start state, transition and end state for each movement
+version; // the version of this package that read the beta, such as "0.12.0"
 ```
 
 Installing from GitHub Packages needs a token with `read:packages`, even though the package is public. The release tarball's URL needs no token, but pins one version.
