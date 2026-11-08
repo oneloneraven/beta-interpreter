@@ -51,6 +51,7 @@ const grammar = words => [
   ["move word", Object.keys(words.moves)],
   ["qualifier", words.qualifiers],
   ["location word", Object.keys(words.locations ?? {})],
+  ["direction word", words.directions ?? []],
   ["filler word", words.filler],
 ];
 

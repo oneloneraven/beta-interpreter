@@ -329,3 +329,42 @@ describe("a toe on a hold", () => {
     expect(step("Right heel hook and toe hook on the horn").pos).toEqual(["heel-hook", "toe-hook"]);
   });
 });
+
+describe("wall angles", () => {
+  /** @param {import("../src/interpreter.js").Term[]} ts */
+  const ids = ts => ts.map(t => t.id);
+
+  it("reads a direction word before a hold as describing the hold, not the wall", () => {
+    const r = parse("Left foot press on vertical edge");
+    expect([ids(r.terrain), ids(r.beats[0].terrain), r.beats[0].holds[0].qualifiers]).toEqual([[], [], ["vertical"]]);
+    expect(say(r.beats[0])).toBe("Left foot: on a vertical edge.");
+  });
+
+  it("reads a direction word as describing the hold across a qualifier", () => {
+    const r = parse("Left hand on the vertical sharp edge");
+    expect([ids(r.terrain), r.beats[0].holds[0].qualifiers]).toEqual([[], ["vertical", "sharp"]]);
+  });
+
+  it("keeps the typo notice when a corrected direction word describes a hold", () => {
+    expect(parse("Left foot on verticle edge").fuzzy).toEqual([{ from: "verticle", to: "vertical" }]);
+  });
+
+  it("still reads a direction word on its own as a wall angle", () => {
+    expect(ids(parse("Left hand up the vertical wall to the jug").terrain)).toEqual(["vert"]);
+  });
+
+  it("still reads an angle word before a feature as a wall angle", () => {
+    expect(ids(parse("Left hand up the overhanging arête to the jug").beats[0].terrain)).toEqual(["overhang"]);
+  });
+
+  it("records a stated wall angle against its step only", () => {
+    const r = parse("Left hand to the jug. Right hand to the crimp in the upper roof");
+    expect(r.beats.map(b => ids(b.terrain))).toEqual([[], ["roof"]]);
+    expect(ids(r.terrain)).toEqual(["roof"]);
+  });
+
+  it("keeps a scene-setting wall angle at climb level only", () => {
+    const r = parse("Overhanging arête. Left hand to the jug");
+    expect([ids(r.terrain), r.beats.map(b => ids(b.terrain))]).toEqual([["overhang"], [[]]]);
+  });
+});

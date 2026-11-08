@@ -19,6 +19,7 @@
  *   moves: Record<string, string>,
  *   qualifiers: string[],
  *   locations?: Record<string, string>,
+ *   directions?: string[],
  *   filler: string[],
  *   splitAlways: string[],
  *   splitBeforeMove: string[],
@@ -47,6 +48,7 @@
  *   clause: number,
  *   move?: string,
  *   qualifiers: string[],
+ *   terrain: Term[],
  *   unread?: boolean,
  * }} Beat
  * @typedef {{ s: number, e: number, facet: string, term?: Term, ambiguous?: boolean, fuzzy?: boolean }} Span
@@ -127,6 +129,7 @@ export function createInterpreter({ terms, words }) {
   const moveWords = new Map(Object.entries(words.moves));
   const qualifiers = new Set(words.qualifiers);
   const locations = new Map(Object.entries(words.locations ?? {}));
+  const directions = new Set(words.directions);
   const filler = new Set(words.filler);
   const splitAlways = new Set(words.splitAlways);
   const splitBeforeMove = new Set(words.splitBeforeMove);
@@ -311,6 +314,7 @@ export function createInterpreter({ terms, words }) {
         clause: ci,
         issues: [],
         qualifiers: [],
+        terrain: [],
       };
       /** @type {{ side: string | null, part: string | null, from: number, to: number }[]} */
       const runs = [];
@@ -352,6 +356,15 @@ export function createInterpreter({ terms, words }) {
         if (swap.kind === "location")
           for (const t of out.trace) if (t.s >= swap.s && t.e <= swap.e && t.kind === "limb") t.kind = "location";
         items.splice(run.from, run.to - run.from + 1, swap);
+      }
+      for (const [i, m] of items.entries()) {
+        if (m.kind !== "term" || !directions.has(m.key)) continue;
+        let j = i + 1;
+        while (items[j]?.kind === "qualifier") j++;
+        if (!holdish(items[j])) continue;
+        items[i] = { kind: "qualifier", word: m.key, n: m.n, s: m.s, e: m.e };
+        if (m.fz.length) out.fuzzy.push({ from: m.fz.join(" "), to: m.key });
+        for (const t of out.trace) if (t.s === m.s && t.kind === "term") t.kind = "qualifier";
       }
       if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
@@ -458,6 +471,7 @@ export function createInterpreter({ terms, words }) {
         if (facet === "terrain") {
           if (placing()) attach({ kind: "terrain", term });
           else pendingLoc = [];
+          if (!beat.terrain.includes(term)) beat.terrain.push(term);
           if (!out.terrain.includes(term)) out.terrain.push(term);
           continue;
         }
