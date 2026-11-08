@@ -182,4 +182,14 @@ describe("toMovements", () => {
     const r = toMovements(parse("Overhanging arête. Squeeze it with compression, flag and paddle up the rail."));
     expect([r.terrain.map(t => t.id), r.features.map(t => t.id)]).toEqual([["overhang"], ["arete"]]);
   });
+
+  it("records each stated wall angle against its movement, and infers none", () => {
+    const r = toMovements(
+      parse("Left hand to the jug on the slab. Right hand to the crimp in the roof. Left hand to the rail"),
+    );
+    expect([r.terrain.map(t => t.id), r.movements.map(m => m.terrain.map(t => t.id))]).toEqual([
+      ["slab", "roof"],
+      [["slab"], ["roof"], []],
+    ]);
+  });
 });

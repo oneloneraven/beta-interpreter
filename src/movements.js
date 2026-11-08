@@ -19,6 +19,7 @@ import { facetOf } from "./interpreter.js";
  *   cruxSource: "stated" | "inferred" | null,
  *   steps: number[],
  *   issues: string[],
+ *   terrain: Term[],
  * }} Movement
  * @typedef {{ terrain: Term[], features: Term[], movements: Movement[] }} MovementRecord
  * @typedef {{ keys: LimbKey[], side: SideSource | null }} Placement
@@ -107,6 +108,8 @@ export function toMovements(reading) {
   let crux = false;
   /** @type {string[]} */
   let issues = [];
+  /** @type {Term[]} */
+  let terrain = [];
 
   /** @param {Placement} at */
   const establish = at => {
@@ -136,6 +139,7 @@ export function toMovements(reading) {
     steps.push(i);
     crux ||= beat.crux;
     issues.push(...beat.issues);
+    for (const t of beat.terrain) if (!terrain.includes(t)) terrain.push(t);
     if (beat.unread) return;
     /** @type {Placement} */
     const stated = { keys: keysFor(beat.side, beat.part), side: "stated" };
@@ -201,11 +205,13 @@ export function toMovements(reading) {
       cruxSource: crux ? "stated" : null,
       steps,
       issues,
+      terrain,
     });
     start = emptyState();
     steps = [];
     crux = false;
     issues = [];
+    terrain = [];
   });
 
   if (steps.length)
@@ -217,6 +223,7 @@ export function toMovements(reading) {
       cruxSource: crux ? "stated" : null,
       steps,
       issues,
+      terrain,
     });
   const moves = movements.filter(m => m.transition);
   if (moves.length === 1 && !movements.some(m => m.crux)) {

@@ -112,6 +112,7 @@
     "behind": "relative",
     "between": "relative"
   },
+  "directions": ["vertical"],
   "filler": [
     "a",
     "an",
