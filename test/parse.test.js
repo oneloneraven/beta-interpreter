@@ -28,6 +28,16 @@ describe("parse", () => {
     expect(parse("Left foot?").beats.map(say)).toEqual(["Left foot."]);
   });
 
+  it("guesses two words typed together as their split", () => {
+    const r = parse("Step through left foot tomoress on vertical edge");
+    expect(r.unknown.map(u => [u.raw, u.guess])).toEqual([["tomoress", "to press"]]);
+    expect(parse("Left hand tothe jug").unknown.map(u => u.guess)).toEqual(["to the"]);
+  });
+
+  it("guesses no split for a word whose halves aren't known", () => {
+    expect(parse("Left hand zzqqxx jug").unknown.map(u => u.guess)).toEqual([undefined]);
+  });
+
   it("splits on 'and' before a transition", () => {
     expect(parse("match and rock over").beats.map(say)).toEqual(["Match.", "Rockover."]);
   });
