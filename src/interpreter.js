@@ -260,9 +260,13 @@ export function createInterpreter({ terms, words }) {
 
     /** @type {(typeof toks)[number][][]} */
     const clauses = [[]];
+    /** @type {Set<number>} */
+    const afterThen = new Set();
     for (const tok of toks) {
-      if (tok.sep) clauses.push([]);
-      else clauses[clauses.length - 1].push(tok);
+      if (tok.sep) {
+        if (splitAlways.has(tok.n)) afterThen.add(clauses.length);
+        clauses.push([]);
+      } else clauses[clauses.length - 1].push(tok);
     }
 
     /** @type {Reading} */
@@ -604,10 +608,12 @@ export function createInterpreter({ terms, words }) {
           beat.order = beat.order.filter(o => o.kind !== "position" || !parts.includes(o.term));
           break;
         }
-      for (const h of beat.holds) h.role ||= beat.moves.length || beat.move !== undefined ? "target" : "on";
+      const bare = !beat.moves.length && beat.move === undefined && !beat.pos.length && !beat.side && !beat.part;
+      const nextStep = bare && afterThen.has(ci) && beat.holds.length > 0;
+      for (const h of beat.holds) h.role ||= beat.moves.length || beat.move !== undefined || nextStep ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";
-      if (!beat.moves.length && beat.move === undefined && !beat.pos.length && !beat.side && !beat.part) {
+      if (bare && !nextStep) {
         if (items.some(m => m.kind === "unknown")) {
           beat.unread = true;
           out.beats.push(beat);
