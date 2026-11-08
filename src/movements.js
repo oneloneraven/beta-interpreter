@@ -10,7 +10,7 @@ import { facetOf } from "./interpreter.js";
  * @typedef {{ side: SideSource | null, hold: Hold | null, holdSource: "stated" | "inferred" | null, techniques: Term[] }} Contact
  * @typedef {Contact & { part: string | null }} Unplaced
  * @typedef {{ limbs: Partial<Record<LimbKey, Contact>>, body: Term[], unplaced: Unplaced[] }} State
- * @typedef {{ terms: Term[], limbs: LimbKey[], side: SideSource | null }} Transition
+ * @typedef {{ terms: Term[], limbs: LimbKey[], side: SideSource | null, extent: string[] }} Transition
  * @typedef {{
  *   start: State,
  *   transition: Transition | null,
@@ -132,7 +132,7 @@ export function toMovements(reading) {
       if (prev) at = { keys: [sameLimb ? prev : OTHER[prev]], side: "inferred" };
     }
     if (!at.keys.length) at.side = null;
-    return { transition: { terms, limbs: at.keys, side: at.side }, part, at };
+    return { transition: { terms, limbs: at.keys, side: at.side, extent: [...beat.extent] }, part, at };
   }
 
   reading.beats.forEach((beat, i) => {

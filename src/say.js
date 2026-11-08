@@ -34,6 +34,8 @@ const pluralName = name => {
 const BESIDE = new Set(["left", "right", "upper"]);
 /** @type {Set<string>} */
 const PART_OF = new Set(["top", "bottom", "back", "side", "front"]);
+/** @type {Set<string>} */
+const TOWARDS = new Set(["up", "down", "along"]);
 
 /** @param {Hold} h @returns {[string[], string[]]} */
 function split(h) {
@@ -74,7 +76,7 @@ function holdPhrase(h) {
   if (!h.of) return [role, `the ${where}`, name && `of ${counted(h, name)}`].filter(Boolean).join(" ");
   const located = PART_OF.has(rest[0])
     ? `at the ${where} of ${anchorPhrase(h.of)}`
-    : `${where}${BESIDE.has(rest[rest.length - 1]) ? " of" : ""} ${anchorPhrase(h.of)}`;
+    : `${where}${BESIDE.has(rest[rest.length - 1]) ? " of" : h.of.kind === "limb" && TOWARDS.has(rest[rest.length - 1]) ? " from" : ""} ${anchorPhrase(h.of)}`;
   return [name && role, name && counted(h, name), located].filter(Boolean).join(" ");
 }
 

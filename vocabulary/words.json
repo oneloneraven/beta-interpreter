@@ -115,6 +115,7 @@
   },
   "directions": ["vertical"],
   "locators": ["up", "down", "along", "further"],
+  "extents": ["further"],
   "filler": [
     "a",
     "an",
