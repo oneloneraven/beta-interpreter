@@ -7,7 +7,7 @@ import { facetOf } from "./interpreter.js";
  * @typedef {import("./interpreter.js").Reading} Reading
  * @typedef {"lh" | "rh" | "lf" | "rf"} LimbKey
  * @typedef {"stated" | "implied" | "inferred"} SideSource
- * @typedef {{ side: SideSource | null, hold: Hold | null, holdSource: "stated" | "inferred" | null, techniques: Term[] }} Contact
+ * @typedef {{ side: SideSource | null, hold: Hold | null, holdSource: "stated" | "inferred" | null, techniques: Term[], carried: boolean }} Contact
  * @typedef {Contact & { part: string | null }} Unplaced
  * @typedef {{ limbs: Partial<Record<LimbKey, Contact>>, body: Term[], unplaced: Unplaced[] }} State
  * @typedef {{ terms: Term[], limbs: LimbKey[], side: SideSource | null, extent: string[] }} Transition
@@ -65,7 +65,7 @@ function place(state, at, part, { hold, technique }) {
   const contacts = [];
   if (at.keys.length)
     for (const key of at.keys) {
-      const c = state.limbs[key] ?? { side: at.side, hold: null, holdSource: null, techniques: [] };
+      const c = state.limbs[key] ?? { side: at.side, hold: null, holdSource: null, techniques: [], carried: false };
       state.limbs[key] = c;
       if (at.side && (!c.side || RANK[at.side] > RANK[c.side])) c.side = at.side;
       contacts.push(c);
@@ -73,7 +73,7 @@ function place(state, at, part, { hold, technique }) {
   else {
     const p = limbPart(part);
     const found = state.unplaced.find(x => x.part === p);
-    const u = found ?? { part: p, side: null, hold: null, holdSource: null, techniques: [] };
+    const u = found ?? { part: p, side: null, hold: null, holdSource: null, techniques: [], carried: false };
     if (!found) state.unplaced.push(u);
     contacts.push(u);
   }
@@ -91,6 +91,29 @@ const closes = beat =>
   beat.moves.length > 0 ||
   beat.move !== undefined ||
   beat.order.some(p => (p.kind === "hold" ? p.hold.role === "target" : p.kind === "position" && p.role === "target"));
+
+/** @param {Contact} c @param {boolean} carried @returns {Contact} */
+const copy = (c, carried) => ({ ...c, techniques: [...c.techniques], carried });
+
+/** @param {Movement[]} movements */
+function carryOver(movements) {
+  /** @type {Partial<Record<LimbKey, Contact>>} */
+  let carry = {};
+  for (const m of movements) {
+    for (const [key, c] of /** @type {[LimbKey, Contact][]} */ (Object.entries(carry)))
+      if (c && !m.start.limbs[key]) m.start.limbs[key] = copy(c, true);
+    if (m.transition)
+      for (const [key, c] of /** @type {[LimbKey, Contact][]} */ (Object.entries(m.start.limbs)))
+        if (
+          c &&
+          !m.end.limbs[key] &&
+          !m.transition.limbs.includes(key) &&
+          !m.end.unplaced.some(u => u.part === partOf(key))
+        )
+          m.end.limbs[key] = copy(c, true);
+    carry = m.transition ? m.end.limbs : m.start.limbs;
+  }
+}
 
 /** @param {Reading} reading @returns {MovementRecord} */
 export function toMovements(reading) {
@@ -225,6 +248,7 @@ export function toMovements(reading) {
       issues,
       terrain,
     });
+  carryOver(movements);
   const moves = movements.filter(m => m.transition);
   if (moves.length === 1 && !movements.some(m => m.crux)) {
     moves[0].crux = true;

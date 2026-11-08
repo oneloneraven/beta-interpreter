@@ -9,6 +9,7 @@ const contact = c => ({
   hold: c.hold ? [c.hold.ori, ...c.hold.kinds].flatMap(t => (t ? [t.id] : [])) : [],
   holdSource: c.holdSource,
   techniques: c.techniques.map(t => t.id),
+  ...(c.carried && { carried: true }),
 });
 
 /** @param {State} s */
@@ -42,7 +43,13 @@ describe("toMovements", () => {
           limbs: { lh: { side: "stated", hold: ["sloper", "crimp"], holdSource: "stated", techniques: [] } },
         },
         transition: { terms: ["fire-up"], limbs: ["rh"], side: "inferred" },
-        end: { ...empty, limbs: { rh: { side: "inferred", hold: ["jug"], holdSource: "stated", techniques: [] } } },
+        end: {
+          ...empty,
+          limbs: {
+            lh: { side: "stated", hold: ["sloper", "crimp"], holdSource: "stated", techniques: [], carried: true },
+            rh: { side: "inferred", hold: ["jug"], holdSource: "stated", techniques: [] },
+          },
+        },
         crux: true,
       },
     ]);
@@ -80,16 +87,31 @@ describe("toMovements", () => {
         transition: { terms: ["crossover"], limbs: ["lh"], side: "stated" },
         end: {
           ...empty,
-          limbs: { lh: { side: "stated", hold: ["sidepull", "crimp"], holdSource: "stated", techniques: [] } },
+          limbs: {
+            lh: { side: "stated", hold: ["sidepull", "crimp"], holdSource: "stated", techniques: [] },
+            rh: { side: "stated", hold: ["jug"], holdSource: "stated", techniques: ["match"], carried: true },
+            rf: { side: "stated", hold: ["lip"], holdSource: "stated", techniques: ["heel-hook"], carried: true },
+          },
         },
         crux: false,
       },
       {
-        start: empty,
+        start: {
+          ...empty,
+          limbs: {
+            lh: { side: "stated", hold: ["sidepull", "crimp"], holdSource: "stated", techniques: [], carried: true },
+            rh: { side: "stated", hold: ["jug"], holdSource: "stated", techniques: ["match"], carried: true },
+            rf: { side: "stated", hold: ["lip"], holdSource: "stated", techniques: ["heel-hook"], carried: true },
+          },
+        },
         transition: { terms: ["deadpoint"], limbs: ["rh"], side: "inferred" },
         end: {
           ...empty,
-          limbs: { rh: { side: "inferred", hold: ["sloper", "pinch"], holdSource: "stated", techniques: [] } },
+          limbs: {
+            lh: { side: "stated", hold: ["sidepull", "crimp"], holdSource: "stated", techniques: [], carried: true },
+            rh: { side: "inferred", hold: ["sloper", "pinch"], holdSource: "stated", techniques: [] },
+            rf: { side: "stated", hold: ["lip"], holdSource: "stated", techniques: ["heel-hook"], carried: true },
+          },
         },
         crux: true,
       },
@@ -99,10 +121,30 @@ describe("toMovements", () => {
           limbs: {
             lh: { side: "implied", hold: ["sloper", "pinch"], holdSource: "inferred", techniques: ["match"] },
             rh: { side: "implied", hold: ["sloper", "pinch"], holdSource: "inferred", techniques: ["match"] },
+            rf: { side: "stated", hold: ["lip"], holdSource: "stated", techniques: ["heel-hook"], carried: true },
           },
         },
         transition: { terms: ["rockover"], limbs: [], side: null },
-        end: empty,
+        end: {
+          ...empty,
+          limbs: {
+            lh: {
+              side: "implied",
+              hold: ["sloper", "pinch"],
+              holdSource: "inferred",
+              techniques: ["match"],
+              carried: true,
+            },
+            rh: {
+              side: "implied",
+              hold: ["sloper", "pinch"],
+              holdSource: "inferred",
+              techniques: ["match"],
+              carried: true,
+            },
+            rf: { side: "stated", hold: ["lip"], holdSource: "stated", techniques: ["heel-hook"], carried: true },
+          },
+        },
         crux: false,
       },
     ]);
@@ -128,6 +170,10 @@ describe("toMovements", () => {
         transition: { terms: ["dyno"], limbs: [], side: null },
         end: {
           ...empty,
+          limbs: {
+            lf: { side: "stated", hold: [], holdSource: null, techniques: ["knee-bar"], carried: true },
+            rf: { side: "stated", hold: [], holdSource: null, techniques: ["knee-bar"], carried: true },
+          },
           unplaced: [{ part: "hand", side: null, hold: ["jug"], holdSource: "stated", techniques: [] }],
         },
         crux: true,
@@ -186,6 +232,20 @@ describe("toMovements", () => {
   it("closes a movement on place, so it doesn't fold into the next one's start", () => {
     const r = toMovements(parse("Place right heel in the gully. Left hand to the jug"));
     expect(r.movements.map(m => m.steps)).toEqual([[0], [1]]);
+  });
+
+  it("carries limbs a movement doesn't mention over from the previous movement", () => {
+    const [first, second] = read("Both hands on the jug, then right foot to the edge, then left foot to the smear");
+    const jug = { side: "stated", hold: ["jug"], holdSource: "stated", techniques: [], carried: true };
+    expect(Object.keys(first.end.limbs).sort()).toEqual(["lh", "rf", "rh"]);
+    expect([first.end.limbs.lh, first.end.limbs.rh]).toEqual([jug, jug]);
+    expect(second.start.limbs).toMatchObject({ lh: jug, rh: jug, rf: { hold: ["edge"], carried: true } });
+    expect(Object.keys(second.end.limbs).sort()).toEqual(["lf", "lh", "rf", "rh"]);
+  });
+
+  it("doesn't carry a limb into the end when an unsettled limb of that part moved", () => {
+    const [m] = read("Both hands on the jug, then dyno to the lip");
+    expect([Object.keys(m.end.limbs), m.end.unplaced.map(u => u.part)]).toEqual([[], ["hand"]]);
   });
 
   it("records how far a move goes on its transition", () => {

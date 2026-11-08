@@ -22,7 +22,7 @@ export function confidence(reading, record) {
   for (const m of record.movements) {
     for (const st of [m.start, m.end]) {
       for (const c of Object.values(st.limbs)) {
-        if (!c) continue;
+        if (!c || c.carried) continue;
         add(c.side);
         if (c.hold) add(c.holdSource);
       }
