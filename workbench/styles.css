@@ -1380,6 +1380,12 @@ button.pill:hover {
   font-size: 0.72rem;
 }
 
+.mv-terrain {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .crux-tag {
   margin-inline-start: auto;
   padding: 0 8px;

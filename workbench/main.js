@@ -824,6 +824,12 @@ function detailMovements() {
             class: "mv-steps",
             text: steps.length > 1 ? `steps ${steps[0]}–${steps[steps.length - 1]}` : `step ${steps[0]}`,
           }),
+          m.terrain.length
+            ? h("span", { class: "mv-terrain" }, [
+                h("span", { class: "state-label", text: "Wall" }),
+                ...m.terrain.map(pill),
+              ])
+            : "",
           m.crux ? h("span", { class: "crux-tag", text: m.cruxSource === "inferred" ? "Crux, inferred" : "Crux" }) : "",
         ]),
         h("div", { class: "mv-body" }, [stateBlock(m.start, "Start"), tr, stateBlock(m.end, "End")]),
