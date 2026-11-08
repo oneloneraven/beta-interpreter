@@ -63,13 +63,20 @@ describe("vocabulary edits", () => {
     expect(addWord(fresh().words, "moves", "stamp", [], "lower").moves.stamp).toBe("lower");
   });
 
+  it("adds a move word with no region, for any limb", () => {
+    expect(addWord(fresh().words, "moves", "put", [], null).moves.put).toBeNull();
+    expect(addWords(fresh().words, "moves", ["put"], [], null).words.moves.put).toBeNull();
+  });
+
   it("refuses a word already in any grammar list, a term phrase, more than one word, or an unknown list", () => {
     expect(() => addWord(fresh().words, "filler", "the")).toThrow("“the” is already a filler word.");
     expect(() => addWord(fresh().words, "filler", "under")).toThrow("“under” is already a location word.");
     expect(() => addWord(fresh().words, "qualifiers", "the")).toThrow("“the” is already a filler word.");
     expect(() => addWord(fresh().words, "filler", "tiny")).toThrow("“tiny” is already a qualifier.");
     expect(() => addWord(fresh().words, "filler", "reach")).toThrow("“reach” is already a move word.");
-    expect(() => addWord(fresh().words, "moves", "slap")).toThrow("A move word needs a region: upper, lower or full.");
+    expect(() => addWord(fresh().words, "moves", "slap")).toThrow(
+      "A move word needs a region: upper, lower or full, or none for any limb.",
+    );
     expect(() => addWord(fresh().words, "filler", "left")).toThrow("“left” is already a limb word.");
     expect(() => addWord(fresh().words, "filler", "very good")).toThrow("A word list takes single words.");
     expect(() => addWord(fresh().words, "filler", "jug", fresh().terms)).toThrow("“jug” is a vocabulary phrase (Jug).");

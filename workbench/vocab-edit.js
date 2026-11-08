@@ -59,7 +59,7 @@ const grammar = words => [
 
 /**
  * @param {Words} words @param {string} list @param {string} word @param {Term[]} [terms]
- * @param {string} [region] the taxonomy region a move word moves: upper, lower or full
+ * @param {string | null} [region] the taxonomy region a move word moves: upper, lower or full, or null for any limb
  * @returns {Words}
  */
 export function addWord(words, list, word, terms = [], region) {
@@ -71,7 +71,8 @@ export function addWord(words, list, word, terms = [], region) {
   const used = owners(terms, k);
   if (used.length) throw new Error(`“${k}” is a vocabulary phrase (${used.map(t => t.name).join(", ")}).`);
   if (list === "moves") {
-    if (!region || !REGIONS.includes(region)) throw new Error("A move word needs a region: upper, lower or full.");
+    if (region !== null && (!region || !REGIONS.includes(region)))
+      throw new Error("A move word needs a region: upper, lower or full, or none for any limb.");
     return { ...words, moves: { ...words.moves, [k]: region } };
   }
   const name = /** @type {"filler" | "qualifiers"} */ (list);
@@ -80,7 +81,7 @@ export function addWord(words, list, word, terms = [], region) {
 
 /**
  * @param {Words} words @param {string} list @param {string[]} items @param {Term[]} [terms]
- * @param {string} [region]
+ * @param {string | null} [region]
  */
 export function addWords(words, list, items, terms = [], region) {
   let next = words;
