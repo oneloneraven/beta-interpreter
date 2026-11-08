@@ -444,6 +444,7 @@ export function createInterpreter({ terms, words }) {
           continue;
         }
         if (m.kind === "unknown") {
+          rockRun = false;
           out.unknown.push({ raw: m.raw, guess: m.guess, s: m.s, e: m.e });
           out.spans.push({ s: m.s, e: m.e, facet: "unknown" });
           continue;

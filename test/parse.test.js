@@ -210,6 +210,12 @@ describe("where a hold is", () => {
     }
   });
 
+  it("ends a run of holds at an unknown word", () => {
+    const r = parse("Move left foot to flake further up the rail");
+    expect([r.beats[0].holds.map(ids), r.unknown.map(u => u.raw)]).toEqual([[["flake"], ["rail"]], ["further"]]);
+    expect(say(r.beats[0])).toBe("Left foot: to a flake to a rail.");
+  });
+
   it("places a hold relative to terrain", () => {
     const r = parse("Right foot on the edge under the roof");
     const [edge] = r.beats[0].holds;
