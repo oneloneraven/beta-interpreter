@@ -1,3 +1,4 @@
+import pkg from "../package.json" with { type: "json" };
 import terms from "../vocabulary/terms.json" with { type: "json" };
 import words from "../vocabulary/words.json" with { type: "json" };
 import { createInterpreter } from "./interpreter.js";
@@ -20,6 +21,8 @@ import { createInterpreter } from "./interpreter.js";
 export { createInterpreter, facetOf, norm } from "./interpreter.js";
 export { toMovements } from "./movements.js";
 export { holdName, say, who } from "./say.js";
+
+export const version = pkg.version;
 
 /** @type {Vocabulary} */
 export const vocabulary = { terms: terms.terms, words };
