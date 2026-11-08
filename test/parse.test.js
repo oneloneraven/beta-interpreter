@@ -38,6 +38,16 @@ describe("parse", () => {
     expect(parse("Left hand zzqqxx jug").unknown.map(u => u.guess)).toEqual([undefined]);
   });
 
+  it("keeps a step after 'then' that names a hold but no limb", () => {
+    const r = parse("Left hand to the crimp then flake up the rail");
+    expect([r.beats.map(say), r.features]).toEqual([["Left hand: to a crimp.", "To a flake up a rail."], []]);
+  });
+
+  it("still reads a sentence that only sets the scene as climb-level", () => {
+    const r = parse("Overhanging arête. Left hand to the crimp");
+    expect([r.beats.length, r.features.map(t => t.id), r.terrain.map(t => t.id)]).toEqual([1, ["arete"], ["overhang"]]);
+  });
+
   it("splits on 'and' before a transition", () => {
     expect(parse("match and rock over").beats.map(say)).toEqual(["Match.", "Rockover."]);
   });
