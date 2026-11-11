@@ -16,7 +16,7 @@ import { termId } from "./vocab-edit.js";
  * @typedef {import("../src/movements.js").Contact} Contact
  * @typedef {ReturnType<typeof toMovements>} MovementRecord
  * @typedef {ReturnType<typeof groupQuestions>} Questions
- * @typedef {"dashboard" | "reading" | "questions" | "movements" | "steps" | "json" | "vocabulary"} View
+ * @typedef {"dashboard" | "reading" | "questions" | "movements" | "steps" | "json" | "vocabulary" | "samples"} View
  */
 
 /** @type {[View, string][]} */
@@ -28,6 +28,7 @@ const VIEWS = [
   ["steps", "Steps"],
   ["json", "JSON"],
   ["vocabulary", "Vocabulary"],
+  ["samples", "Samples"],
 ];
 const SPECTRUM = [
   "terrain",
@@ -77,6 +78,7 @@ const state = {
   /** @type {string[]} */ log: [],
   /** @type {{ sha: string, diff: string, changed: number } | null} */ status: null,
   /** @type {View} */ view: "dashboard",
+  /** @type {{ samples: import("../scripts/samples-file.mjs").Sample[] } | { error: string } | null} */ samples: null,
 };
 
 /** @param {string} path @param {unknown} [body] */
@@ -337,6 +339,23 @@ function renderQuestionsCard() {
 const figure = (label, value, warn = false) =>
   h("div", { class: `figure${warn ? " warn" : ""}` }, [h("dt", { text: label }), h("dd", { text: String(value) })]);
 
+/** @param {MovementRecord["movements"][number]} mv @param {number} i */
+function movementLine(mv, i) {
+  const t = mv.transition;
+  const ends = LIMBS.flatMap(k =>
+    mv.end.limbs[k]?.hold ? [`${k.toUpperCase()} ${holdText(mv.end.limbs[k]?.hold ?? null)}`] : [],
+  );
+  return h("li", { class: mv.crux ? "crux" : "" }, [
+    h("span", { class: "n", text: String(i + 1) }),
+    h("span", {
+      class: "mv",
+      text: t ? (t.terms.length ? t.terms.map(x => x.name).join(" + ") : "unnamed move") : "set-up only",
+    }),
+    h("span", { class: "limbs", text: t?.limbs.length ? t.limbs.map(k => k.toUpperCase()).join(" ") : "" }),
+    h("span", { class: "to", text: ends.join(", ") }),
+  ]);
+}
+
 function renderMovementsCard() {
   const rec = state.record;
   const m = metrics();
@@ -352,25 +371,7 @@ function renderMovementsCard() {
       figure("Inferred", m.inferred),
     ]),
     rec.movements.length
-      ? h(
-          "ol",
-          { class: "mv-list" },
-          rec.movements.map((mv, i) => {
-            const t = mv.transition;
-            const ends = LIMBS.flatMap(k =>
-              mv.end.limbs[k]?.hold ? [`${k.toUpperCase()} ${holdText(mv.end.limbs[k]?.hold ?? null)}`] : [],
-            );
-            return h("li", { class: mv.crux ? "crux" : "" }, [
-              h("span", { class: "n", text: String(i + 1) }),
-              h("span", {
-                class: "mv",
-                text: t ? (t.terms.length ? t.terms.map(x => x.name).join(" + ") : "unnamed move") : "set-up only",
-              }),
-              h("span", { class: "limbs", text: t?.limbs.length ? t.limbs.map(k => k.toUpperCase()).join(" ") : "" }),
-              h("span", { class: "to", text: ends.join(", ") }),
-            ]);
-          }),
-        )
+      ? h("ol", { class: "mv-list" }, rec.movements.map(movementLine))
       : h("p", { class: "empty", text: "A step with a move or a target hold closes a movement." }),
   );
 }
@@ -467,6 +468,7 @@ function readback() {
 function setView(view) {
   const tabFocused = !!document.activeElement?.closest("#tabs");
   state.view = view;
+  if (view === "samples" && !state.samples) fetchSamples();
   const dash = view === "dashboard";
   $("dash").hidden = !dash;
   $("detail").hidden = dash;
@@ -502,12 +504,97 @@ function renderDetail() {
     steps: detailSteps,
     json: detailJson,
     vocabulary: detailVocabulary,
+    samples: detailSamples,
   };
   body.replaceChildren(...views[view]());
 }
 
 /** @param {string} title @param {(Node | string)[]} kids @param {string} [cls] */
 const panel = (title, kids, cls = "") => h("section", { class: `pane ${cls}` }, [h("h3", { text: title }), ...kids]);
+
+async function fetchSamples() {
+  try {
+    state.samples = await api("/api/samples");
+  } catch (e) {
+    state.samples = { error: e instanceof Error ? e.message : String(e) };
+  }
+  if (state.view === "samples") renderDetail();
+}
+
+/** @param {string} text */
+function workOn(text) {
+  if (beta.value.trim() && beta.value !== text && !window.confirm("Replace the beta you've typed with this sample?"))
+    return;
+  beta.value = text;
+  state.resolutions.clear();
+  state.selected = null;
+  setView("reading");
+  run();
+}
+
+function detailSamples() {
+  const loaded = state.samples;
+  const reload = h("button", { type: "button", class: "ghost", text: "Reload samples" });
+  reload.addEventListener("click", () => {
+    state.samples = null;
+    renderDetail();
+    fetchSamples();
+  });
+  const head = h("div", { class: "samples-head" }, [
+    h("p", {
+      class: "note",
+      text:
+        loaded && "samples" in loaded
+          ? `${loaded.samples.length} pulled sample${loaded.samples.length === 1 ? "" : "s"}, newest first, read by this working copy.`
+          : "",
+    }),
+    reload,
+  ]);
+  if (!loaded) return [head, h("p", { class: "empty", text: "Loading samples…" })];
+  if ("error" in loaded) return [head, h("p", { class: "empty", text: loaded.error })];
+  if (!loaded.samples.length) return [head, h("p", { class: "empty", text: "The last pull had no samples." })];
+  const interpreter = state.interpreter;
+  if (!interpreter) return [head];
+  const list = h(
+    "ol",
+    { class: "samples" },
+    [...loaded.samples].reverse().map(sample => {
+      const reading = interpreter.parse(sample.text);
+      const rec = toMovements(reading);
+      const open = h("button", { type: "button", text: "Work on this" });
+      open.addEventListener("click", () => workOn(sample.text));
+      return h("li", { class: "sample" }, [
+        h("div", { class: "sample-head" }, [
+          h("span", {
+            class: "mono dim",
+            text: [sample.created_at, sample.interpreter_version && `read by v${sample.interpreter_version}`]
+              .filter(Boolean)
+              .join(", "),
+          }),
+          h("span", {
+            class: "mono dim",
+            text: `${rec.movements.length} movement${rec.movements.length === 1 ? "" : "s"}, ${reading.unknown.length} unknown, ${reading.amb.length} ambiguous`,
+          }),
+          open,
+        ]),
+        h("p", { class: "sample-text", text: sample.text }),
+        reading.unknown.length
+          ? h(
+              "div",
+              { class: "actions" },
+              [...new Set(reading.unknown.map(u => norm(u.raw)))].map(w =>
+                h("span", { class: "pill k-unknown", text: w }),
+              ),
+            )
+          : "",
+        rec.movements.length
+          ? h("ol", { class: "mv-list" }, rec.movements.map(movementLine))
+          : h("p", { class: "empty", text: "No movements read." }),
+      ]);
+    }),
+  );
+  return [head, list];
+}
 
 function detailReading() {
   const tape = /** @type {HTMLElement} */ ($("tape").cloneNode(true));

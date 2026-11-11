@@ -18,7 +18,7 @@ personal data from this project.
 | Data | Purpose | Lawful basis | Retention | Who can see it |
 |---|---|---|---|---|
 | Beta text passed to the package by Climbing Logbook | Read it into a structured record | Recorded in Climbing Logbook's record of processing | Not kept: the package holds it in memory for the call only | The caller |
-| Beta samples export: hardest-move text, interpreter version and saved date, with no user or entry link, saved by Climbing Logbook's `pull-beta-samples` script to `~/.local/share/beta-interpreter/samples.json` (mode 0600) | Vocabulary work: find unknown and ambiguous words in real beta (`scripts/corpus-report.mjs`) | Legitimate interests, as recorded by Climbing Logbook for `beta_samples` | Each pull replaces the last, so the copy ages out with the table's 90 days | The maintainer, on their own machine |
+| Beta samples export: hardest-move text, interpreter version and saved date, with no user or entry link, saved by Climbing Logbook's `pull-beta-samples` script to `~/.local/share/beta-interpreter/samples.json` (mode 0600) | Vocabulary work: find unknown and ambiguous words in real beta (`scripts/corpus-report.mjs`), and browse samples and their readings in the workbench | Legitimate interests, as recorded by Climbing Logbook for `beta_samples` | Each pull replaces the last, so the copy ages out with the table's 90 days | The maintainer, on their own machine |
 | Corpus report baseline: each sample's text and its reading, saved by `corpus-report.mjs --save-baseline` to `~/.local/share/beta-interpreter/baseline.json` (mode 0600) | Show readings that changed since the baseline | Legitimate interests, as for the export | Until the next `--save-baseline` | The maintainer, on their own machine |
 
 ## Gaps to settle
