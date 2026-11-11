@@ -15,7 +15,8 @@ change that adds or moves a trust boundary ([coding standards](coding-standards.
   Packages, and creates a GitHub Release with the tarball attached.
 - **The workbench** (`workbench/`, `pnpm workbench`): a Vite dev server on
   `localhost:5174` for trying beta and teaching vocabulary. Its API writes
-  `vocabulary/*.json` and runs `git diff` on them.
+  `vocabulary/*.json`, runs `git diff` on them, and reads the beta samples
+  export so they can be browsed.
 - **The corpus report** (`scripts/corpus-report.mjs`): reads the beta
   samples export from the maintainer's machine and can save a baseline next
   to it.
@@ -26,8 +27,8 @@ change that adds or moves a trust boundary ([coding standards](coding-standards.
 |---|---|---|---|
 | Caller → package | Climbing Logbook and `parse` | Beta text typed by Climbing Logbook's users | Words are looked up in `Map`s, so object property names read as unknown (`test/parse.test.js`); no I/O or evaluation of input |
 | Release job → GitHub | `release.yml` and the GitHub API and Packages | The default `GITHUB_TOKEN` with `contents: write`, `packages: write` and `pull-requests: read` | Granted to the release job only, with read-only defaults for the workflow; actions pinned by SHA; runs only on a merged PR or a manual dispatch |
-| Browser → workbench API | Any page open in the maintainer's browser and `localhost:5174` | Requests to the vocabulary endpoints | Bound to `localhost`; POSTs refused unless the origin is the workbench and the body is JSON (`isLocalJson`, `workbench/api.js`) |
-| Climbing Logbook → maintainer's machine | The `beta_samples` export and the corpus report | Beta sample text | Saved outside any repository with mode 0600; never committed |
+| Browser → workbench API | Any page open in the maintainer's browser and `localhost:5174` | Requests to the vocabulary endpoints, and beta sample text from `GET /api/samples` | Bound to `localhost`; Vite refuses other `Host` headers, which blocks DNS rebinding; no CORS headers, so other origins can't read responses; POSTs refused unless the origin is the workbench and the body is JSON (`isLocalJson`, `workbench/api.js`) |
+| Climbing Logbook → maintainer's machine | The `beta_samples` export, the corpus report and the workbench | Beta sample text | Saved outside any repository with mode 0600; never committed |
 
 ## Assets
 
@@ -54,7 +55,7 @@ change that adds or moves a trust boundary ([coding standards](coding-standards.
 | A web page posts to the workbench API and rewrites the vocabulary | Tampering | POSTs need the workbench's own origin and a JSON body; vocabulary changes still reach `main` only through a reviewed PR | Mitigated |
 | A compromised dependency alters the release | Tampering | Lockfile, three-day `minimumReleaseAge`, all install scripts denied, Dependabot and dependency review, actions pinned by SHA | Mitigated |
 | A release with no record of which PR caused it | Repudiation | Tags are cut only from merged PRs; GitHub Releases have generated notes | Mitigated |
-| Beta samples leak from the maintainer's machine or into the repository | Information disclosure | Saved outside any repository with mode 0600 | Mitigated, see [data protection](data-protection.md) for retention gaps |
+| Beta samples leak from the maintainer's machine or into the repository | Information disclosure | Saved outside any repository with mode 0600; the workbench only reads them, and other origins can't read its responses | Mitigated, see [data protection](data-protection.md) for retention gaps |
 | Crafted beta text makes `parse` slow or crash in Climbing Logbook | Denial of service | Limited by the field length Climbing Logbook allows; no fuzzing yet (#21) | Open |
 | A leaked `GITHUB_TOKEN` used to publish or tag | Elevation of privilege | Token lasts only for the job; write scopes only on the release job | Accepted |
 

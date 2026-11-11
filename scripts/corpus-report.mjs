@@ -1,10 +1,8 @@
 // Runs this working copy over the pulled samples: node scripts/corpus-report.mjs [--save-baseline] [--samples file]
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { parse, say } from "../src/index.js";
-
-const DATA_DIR = join(homedir(), ".local/share/beta-interpreter");
+import { DATA_DIR, loadSamples } from "./samples-file.mjs";
 
 /** @param {string} text */
 export function readSample(text) {
@@ -45,12 +43,12 @@ export function buildReport(texts, baseline) {
 function main() {
   const args = process.argv.slice(2);
   const samplesAt = args.indexOf("--samples");
-  const samplesFile = samplesAt === -1 ? join(DATA_DIR, "samples.json") : args[samplesAt + 1];
+  if (samplesAt !== -1 && !args[samplesAt + 1]) throw new Error("--samples needs a file.");
+  const samples = loadSamples(samplesAt === -1 ? undefined : args[samplesAt + 1]);
   const baselineFile = join(DATA_DIR, "baseline.json");
-  const samples = JSON.parse(readFileSync(samplesFile, "utf8"));
   const baseline = existsSync(baselineFile) ? JSON.parse(readFileSync(baselineFile, "utf8")) : undefined;
   const report = buildReport(
-    samples.map(/** @param {{ text: string }} s */ s => s.text),
+    samples.map(s => s.text),
     baseline,
   );
 

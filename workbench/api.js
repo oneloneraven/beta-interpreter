@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
+import { loadSamples } from "../scripts/samples-file.mjs";
 import { addPhrase, addTerm, addWords, movePhrase, removePhrase } from "./vocab-edit.js";
 
 const run = promisify(execFile);
@@ -68,6 +69,9 @@ const GET = {
     return { terms, words };
   },
   "/api/status": status,
+  async "/api/samples"() {
+    return { samples: loadSamples() };
+  },
 };
 
 /** @param {import("node:http").IncomingMessage} req */

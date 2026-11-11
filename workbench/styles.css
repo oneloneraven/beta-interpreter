@@ -1880,3 +1880,32 @@ button.pill:hover {
   border-color: currentColor;
   font-weight: 600;
 }
+
+.samples-head,
+.sample-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.samples {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sample {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--rule);
+}
+
+.sample-text {
+  margin: 0;
+  white-space: pre-wrap;
+}
