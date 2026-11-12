@@ -7,7 +7,7 @@ privately rather than opening a public issue.
 
 Use GitHub's private vulnerability reporting: the "Report a vulnerability"
 button under this repo's
-[Security tab](https://github.com/ravendarque/beta-interpreter/security/advisories/new).
+[Security tab](https://github.com/oneloneraven/beta-interpreter/security/advisories/new).
 This opens a private draft advisory visible only to the maintainer until a
 fix is ready.
 

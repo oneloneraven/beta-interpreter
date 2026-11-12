@@ -1,10 +1,10 @@
 {
-  "name": "@ravendarque/beta-interpreter",
+  "name": "@oneloneraven/beta-interpreter",
   "version": "0.0.0",
   "description": "Rule-based interpreter that turns free-text climbing beta into a structured record.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ravendarque/beta-interpreter.git"
+    "url": "https://github.com/oneloneraven/beta-interpreter.git"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",

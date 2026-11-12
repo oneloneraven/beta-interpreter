@@ -4,7 +4,7 @@ Turns climbing beta written as free text into a structured record, using a finit
 
 The text is the source of truth. Corrections edit the text, and the record is always rebuilt from it.
 
-Status: early research and development. Outstanding work and open questions are tracked in the [issues](https://github.com/ravendarque/beta-interpreter/issues).
+Status: early research and development. Outstanding work and open questions are tracked in the [issues](https://github.com/oneloneraven/beta-interpreter/issues).
 
 ## Design decisions
 
@@ -18,10 +18,10 @@ The design decisions are recorded as [ADRs](docs/adr/README.md):
 
 ## Using it
 
-Each release is published to GitHub Packages as `@ravendarque/beta-interpreter`, and its packed tarball is attached to the GitHub Release.
+Each release is published to GitHub Packages as `@oneloneraven/beta-interpreter`, and its packed tarball is attached to the GitHub Release.
 
 ```js
-import { parse, say, toMovements, version } from "@ravendarque/beta-interpreter";
+import { parse, say, toMovements, version } from "@oneloneraven/beta-interpreter";
 
 const reading = parse("left hand on the crimp, then fire up for the hero jug");
 reading.beats.map(say); // ["Left hand: on a crimp.", "Fire up to a jug."]
