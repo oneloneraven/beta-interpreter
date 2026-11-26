@@ -40,7 +40,8 @@ This project branched off from a Climbing Logbook (CL) session on 2026-10-23. CL
 
 - Code is reviewed against [coding standards](docs/coding-standards.md); hold it to the [engineering standards](.claude/skills/engineering-standards/SKILL.md).
 - Privacy and data rules: [privacy](docs/privacy.md), [record of processing](docs/data-protection.md).
-- Keep the [threat model](docs/threat-model.md) current whenever a trust boundary moves.
+- Keep the threat model current whenever a trust boundary moves. It and other security docs are in `oneloneraven-vault/beta-interpreter/`, which must be checked out beside this repository.
+- Raise security-sensitive issues in `oneloneraven-vault`, not here. Never copy vault content into this repository, its issues, PRs or commits.
 - Screen new dependencies and vendors: [ADR-0002](docs/adr/0002-screen-dependencies-against-bds-boycott-lists.md).
 - Significant decisions get an [ADR](docs/adr/README.md).
 - When a release is wrong: [incident response](docs/runbooks/incident-response.md).
