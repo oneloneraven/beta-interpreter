@@ -98,8 +98,9 @@ browser at desktop width.
 
 ### Security
 
-- Keep [the threat model](threat-model.md) current. A change that adds or
-  moves a trust boundary updates it in the same PR: a new data source, a
+- Keep the threat model current. It's in the private vault
+  (`oneloneraven-vault/beta-interpreter/threat-model.md`). A change that adds or moves a
+  trust boundary updates it in a paired vault PR: a new data source, a
   new workbench endpoint, a new processor, a new secret or CI permission.
 - Secrets never enter git. Local secrets files are gitignored and treated
   as real.

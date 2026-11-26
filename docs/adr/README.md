@@ -9,11 +9,13 @@ old one's status becomes "Superseded by ADR-NNNN".
 
 | ADR | Decision |
 |---|---|
-| [0001](0001-record-architecture-decisions.md) | Record architecture decisions |
-| [0002](0002-screen-dependencies-against-bds-boycott-lists.md) | Screen dependencies and vendors against BDS boycott lists |
-| [0003](0003-rules-first-no-language-model.md) | Rules first, no language model |
-| [0004](0004-the-vocabulary-is-data.md) | The vocabulary is data, not code |
-| [0005](0005-a-flat-faceted-taxonomy.md) | A flat, faceted taxonomy |
-| [0006](0006-movements-not-just-steps.md) | Movements, not just steps |
-| [0007](0007-a-package-for-climbing-logbook.md) | A package for Climbing Logbook |
-| [0008](0008-carry-unmentioned-limbs-over.md) | Carry unmentioned limbs over between movements |
+| 0001 | Record architecture decisions |
+| 0002 | Screen dependencies and vendors against BDS boycott lists |
+| 0003 | Rules first, no language model |
+| 0004 | The vocabulary is data, not code |
+| 0005 | A flat, faceted taxonomy |
+| 0006 | Movements, not just steps |
+| 0007 | A package for Climbing Logbook |
+| 0008 | Carry unmentioned limbs over between movements |
+
+Every ADR is kept in the private vault, at `oneloneraven-vault/beta-interpreter/adr/`. This index lists their numbers and titles only.

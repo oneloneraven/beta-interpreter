@@ -10,11 +10,11 @@ Status: early research and development. Outstanding work and open questions are 
 
 The design decisions are recorded as [ADRs](docs/adr/README.md):
 
-- [Rules first, no language model](docs/adr/0003-rules-first-no-language-model.md)
-- [The vocabulary is data, not code](docs/adr/0004-the-vocabulary-is-data.md)
-- [A flat, faceted taxonomy](docs/adr/0005-a-flat-faceted-taxonomy.md)
-- [Movements, not just steps](docs/adr/0006-movements-not-just-steps.md)
-- [A package for Climbing Logbook](docs/adr/0007-a-package-for-climbing-logbook.md)
+- Rules first, no language model (in the vault)
+- The vocabulary is data, not code (in the vault)
+- A flat, faceted taxonomy (in the vault)
+- Movements, not just steps (in the vault)
+- A package for Climbing Logbook (in the vault)
 
 ## Using it
 
