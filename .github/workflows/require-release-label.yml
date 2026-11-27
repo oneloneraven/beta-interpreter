@@ -39,7 +39,7 @@ jobs:
             [ -z "$f" ] && continue
             case "$f" in
               workbench/*|test/*|scripts/*|prototype/*|docs/*|.github/*|.claude/*) continue ;;
-              .gitignore|biome.json|tsconfig.json|vite.config.js|vitest.config.js|pnpm-workspace.yaml) continue ;;
+              .gitignore|.bootstrap/record.json|biome.json|tsconfig.json|vite.config.js|vitest.config.js|pnpm-workspace.yaml) continue ;;
             esac
             case "$f" in
               */*) ;;
