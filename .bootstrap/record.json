@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "modules": ["core", "js-toolchain"],
+  "visibility": "public",
+  "flags": {},
+  "skipped": {},
+  "exceptions": []
+}
