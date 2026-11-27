@@ -8,3 +8,6 @@ types/
 dist/
 .claude/settings.local.json
 .claude/worktrees/
+
+.bootstrap/*
+!.bootstrap/record.json
